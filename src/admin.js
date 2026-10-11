@@ -6,6 +6,7 @@
   let appRoot;
   let session;
   let restaurants = [];
+  let isPlatformAdmin = false;
   let selectedRestaurantId = '';
   let selectedPanel = 'profile';
   let recoverySession = null;
@@ -201,6 +202,46 @@
     }));
   }
 
+  async function loadPlatformAdminStatus(user) {
+    const filter = new URLSearchParams({
+      select: 'user_id',
+      user_id: `eq.${user.id}`,
+      limit: '1',
+    });
+    try {
+      const rows = await api().rest(`platform_admins?${filter}`, { session });
+      return rows.length > 0;
+    } catch (error) {
+      if (error.message.includes('public.platform_admins') && error.message.includes('schema cache')) {
+        return false;
+      }
+      throw error;
+    }
+  }
+
+  async function loadAllRestaurants() {
+    const records = [];
+    const pageSize = 500;
+    for (let offset = 0; offset < 500000; offset += pageSize) {
+      const query = new URLSearchParams({
+        select: 'id,name,slug,description,logo_url,cover_image_url,phone,whatsapp,address,opening_hours,currency,theme_settings,is_active',
+        order: 'name.asc,slug.asc',
+        limit: String(pageSize),
+        offset: String(offset),
+      });
+      const page = await api().rest(`restaurants?${query}`, { session });
+      if (!Array.isArray(page)) throw new Error('Supabase devolvió una lista de restaurantes no válida.');
+      if (!page.length) break;
+      records.push(...page);
+    }
+    return records.map((restaurant) => ({ ...restaurant, role: 'super_admin' }));
+  }
+
+  async function loadDashboardAccess(user) {
+    isPlatformAdmin = await loadPlatformAdminStatus(user);
+    return isPlatformAdmin ? loadAllRestaurants() : loadMemberships(user);
+  }
+
   async function startDashboard() {
     renderLoading('Cargando tus restaurantes');
     try {
@@ -209,7 +250,7 @@
         renderLogin();
         return;
       }
-      restaurants = await loadMemberships(session.user);
+      restaurants = await loadDashboardAccess(session.user);
       if (!restaurants.some((restaurant) => restaurant.id === selectedRestaurantId)) {
         selectedRestaurantId = restaurants[0]?.id || '';
       }
@@ -231,14 +272,14 @@
     if (!restaurant) {
       appRoot.innerHTML = `
         <div class="admin-app-shell">
-          <header class="admin-topbar"><a class="wordmark" href="${window.CatalogRouter.path('/r/mesa-limon/')}" ><span class="wordmark-icon">M</span><span>Menú digital</span></a><button id="admin-signout" class="admin-signout">Cerrar sesión</button></header>
-          <main class="admin-empty-access"><p class="eyebrow">CUENTA AUTENTICADA</p><h1>Aún no tienes restaurantes asignados.</h1><p>Solicita a la persona responsable que te agregue como miembro. El registro público está desactivado.</p></main>
+          <header class="admin-topbar"><a class="wordmark" href="${window.CatalogRouter.path('/')}" ><span class="wordmark-icon">M</span><span>Mesa Abierta</span></a><button id="admin-signout" class="admin-signout">Cerrar sesión</button></header>
+          <main class="admin-empty-access"><p class="eyebrow">${isPlatformAdmin ? 'SUPER ADMIN' : 'CUENTA AUTENTICADA'}</p><h1>${isPlatformAdmin ? 'Todavía no hay restaurantes registrados.' : 'Aún no tienes restaurantes asignados.'}</h1><p>${isPlatformAdmin ? 'Cuando se registren restaurantes, aparecerán aquí para administración global.' : 'Solicita que te asignen como miembro de un restaurante. El registro público está desactivado.'}</p></main>
         </div>`;
       appRoot.querySelector('#admin-signout').addEventListener('click', onSignOut);
       return;
     }
 
-    const canEditProfile = ['owner', 'admin'].includes(restaurant.role);
+    const canEditProfile = ['owner', 'admin', 'super_admin'].includes(restaurant.role);
     appRoot.innerHTML = `
       <div class="admin-app-shell">
         <header class="admin-topbar">
@@ -251,14 +292,14 @@
         </header>
         <div class="admin-layout">
           <aside class="admin-sidebar">
-            <p class="eyebrow">TU NEGOCIO</p>
+            <p class="eyebrow">${isPlatformAdmin ? 'ADMINISTRACIÓN GLOBAL' : 'TU NEGOCIO'}</p>
             ${restaurants.length > 1 ? `<label class="restaurant-select-label">Restaurante<select id="restaurant-select">${restaurants.map((item) => `<option value="${escapeHtml(item.id)}"${item.id === restaurant.id ? ' selected' : ''}>${escapeHtml(item.name)}</option>`).join('')}</select></label>` : `<div class="sidebar-restaurant">${escapeHtml(restaurant.name)}</div>`}
             <nav class="admin-nav" aria-label="Administración">
               <button type="button" data-panel="profile" class="${selectedPanel === 'profile' ? 'is-active' : ''}">Información del negocio</button>
               <button type="button" data-panel="design" class="${selectedPanel === 'design' ? 'is-active' : ''}">Diseño del catálogo</button>
               <button type="button" data-panel="catalog" class="${selectedPanel === 'catalog' ? 'is-active' : ''}">Productos y categorías <span>PRÓXIMO</span></button>
             </nav>
-            <div class="admin-sidebar-foot"><span class="role-dot"></span>${escapeHtml(restaurant.role)} · ${escapeHtml(restaurant.slug)}</div>
+            <div class="admin-sidebar-foot"><span class="role-dot"></span>${isPlatformAdmin ? 'SUPER ADMIN · TODA LA PLATAFORMA' : `${escapeHtml(restaurant.role)} · ${escapeHtml(restaurant.slug)}`}</div>
           </aside>
           <main class="admin-content">
             <div class="admin-content-heading">
@@ -402,6 +443,7 @@
     api().clearSession();
     session = null;
     restaurants = [];
+      isPlatformAdmin = false;
     try {
       if (currentSession) await api().signOut(currentSession);
       renderLogin({ notice: 'Sesión cerrada.' });
@@ -425,11 +467,13 @@
     try {
       const currentSession = await api().getValidSession();
       if (!currentSession) {
+        isPlatformAdmin = false;
+        restaurants = [];
         renderLogin();
         return;
       }
       session = currentSession;
-      restaurants = await loadMemberships(session.user);
+      restaurants = await loadDashboardAccess(session.user);
       selectedRestaurantId = restaurants[0]?.id || '';
       renderDashboard();
     } catch {

@@ -45,15 +45,31 @@ Slugs demo disponibles: `mesa-limon`, `patio-bruma` y `demo-inactivo`. Los otros
 
 La migración versionada está en `supabase/migrations/20261011000100_initial_catalog_schema.sql`. Incluye restaurantes, miembros, categorías, productos, claves foráneas compuestas que impiden asignar productos a categorías de otro restaurante, índices, restricciones, RLS y el bucket `restaurant-catalog`.
 
+El acceso global se añade mediante `supabase/migrations/20261011000200_platform_super_admin.sql`. No cambia el significado de `owner`, `admin` o `editor`: crea un registro de plataforma separado y RLS sigue determinando qué puede hacer cada sesión.
+
 ### Aplicación manual sin instalar herramientas
 
 1. Crea un proyecto Supabase desde el panel oficial. No hace falta comprar un plan para realizar estas pruebas; no actives servicios de pago.
-2. En **SQL Editor**, abre una consulta nueva, copia el contenido de la migración completa y ejecútala. Confirma que el panel indica éxito antes de continuar. Esta ejecución manual no se registra automáticamente en el historial local de migraciones de Supabase CLI.
-3. En **Project Settings → Data API**, confirma que `public` esté entre los esquemas expuestos. Las versiones recientes no exponen automáticamente todas las tablas nuevas. La migración ya otorga grants explícitos y habilita RLS; ambos requisitos son necesarios para el directorio anónimo.
+2. En **SQL Editor**, abre una consulta nueva, copia y ejecuta primero el contenido de `20261011000100_initial_catalog_schema.sql`; después ejecuta `20261011000200_platform_super_admin.sql`. Confirma éxito en ambos casos. No vuelvas a ejecutar la migración inicial si ya se aplicó; en ese caso ejecuta solo la aditiva. La ejecución manual no se registra en el historial local de Supabase CLI.
+3. En **Project Settings → Data API**, confirma que `public` esté entre los esquemas expuestos. Las versiones recientes no exponen automáticamente todas las tablas nuevas. Los grants explícitos y RLS son requisitos separados.
 4. En **Authentication → Settings**, desactiva los registros públicos. En **Authentication → Providers**, habilita solo los métodos necesarios (para la primera versión, correo/contraseña); crea o invita usuarios desde **Authentication → Users**. No concedas roles según datos enviados por el navegador.
-5. Crea primero el usuario en Authentication y copia su UUID desde la lista de usuarios. En SQL Editor ejecuta el bloque de bootstrap que sigue, reemplazando el UUID y el slug de ejemplo. El bloque debe ejecutarse con el rol privilegiado del SQL Editor, nunca desde el frontend.
-6. Mantén `is_active = false` durante la preparación. Tras comprobar los datos y el catálogo, el owner podrá activar el restaurante desde el panel cuando esa función se implemente; en esta fase la activación puede hacerse manualmente en SQL Editor.
-7. Para registrar otro negocio, repite el bloque con un slug nuevo y un usuario ya creado o invitado. Asigna cada miembro mediante SQL Editor. Los clientes API no tienen permisos para insertar, cambiar ni borrar filas en `restaurant_members`.
+5. Crea primero el usuario en Authentication y copia su UUID desde la lista de usuarios. Para una cuenta super admin, usa el bloque global de abajo. Para un owner de restaurante, ejecuta el bloque de bootstrap de membresía. Ambos bloques deben ejecutarse en SQL Editor, nunca desde el frontend.
+6. Mantén `is_active = false` durante la preparación. Tras comprobar datos y catálogo, el super admin puede activar el negocio; si aún no está conectado el panel, hazlo manualmente en SQL Editor.
+7. Para registrar otro negocio, repite el bloque con un slug nuevo y usuario ya creado/invitado. Los clientes API no pueden insertar, cambiar ni borrar las filas de super admins o miembros.
+
+### Asignar el super admin global
+
+El super admin es una cuenta de Authentication autorizada manualmente; no se crea por registro público. Obtén su UUID en **Authentication → Users**, reemplázalo y ejecuta en SQL Editor:
+
+```sql
+insert into public.platform_admins (user_id)
+values ('REEMPLAZAR-CON-UUID-DE-auth.users'::uuid)
+on conflict (user_id) do nothing;
+```
+
+Para retirar acceso global, ejecuta en SQL Editor `delete from public.platform_admins where user_id = 'UUID-DE-LA-CUENTA'::uuid;`. El navegador no tiene permisos de escritura en esta tabla y el panel no toma el rol de `user_metadata`. El super admin puede ver/editar la ficha de todos los restaurantes, incluidos inactivos, y las políticas le permiten operar contenido/Storage desde las funciones que se implementarán después. La asignación o revocación de miembros/roles de restaurante sigue siendo una operación privilegiada manual; no puede autoasignarse ni crear más super admins desde la app.
+
+Para este cambio usa la migración aditiva `20261011000200_platform_super_admin.sql`; no vuelvas a ejecutar la migración base si ya se aplicó. Tras ejecutar la migración aditiva, confirma que `public` siga expuesto a Data API; la migración concede `SELECT` sobre `platform_admins` solo al rol `authenticated` y RLS limita la lectura a la propia cuenta.
 
 ```sql
 do $$
