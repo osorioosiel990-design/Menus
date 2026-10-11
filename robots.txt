@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://osorioosiel990-design.github.io/Menus/sitemap.xml

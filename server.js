@@ -9,6 +9,8 @@ const contentTypes = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
 };
 
 createServer(async (request, response) => {
@@ -33,6 +35,7 @@ createServer(async (request, response) => {
 
   let filePath = requestedPath;
   try {
+    if (pathname.endsWith('/')) filePath = join(requestedPath, 'index.html');
     const body = await readFile(filePath);
     response.writeHead(200, { 'Content-Type': contentTypes[extname(filePath)] || 'application/octet-stream' });
     response.end(request.method === 'HEAD' ? undefined : body);
@@ -40,6 +43,14 @@ createServer(async (request, response) => {
     if (extname(pathname)) {
       response.writeHead(404).end('Not found');
       return;
+    }
+    try {
+      const directoryIndex = await readFile(join(requestedPath, 'index.html'));
+      response.writeHead(200, { 'Content-Type': contentTypes['.html'] });
+      response.end(request.method === 'HEAD' ? undefined : directoryIndex);
+      return;
+    } catch {
+      // Fall through to the SPA entry for client-side routes.
     }
     filePath = join(root, 'index.html');
     try {

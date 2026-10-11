@@ -12,6 +12,12 @@
 
   function setTitle(title = 'Administración · Catálogos') {
     document.title = title;
+      window.CatalogSeo.update({
+        title: `${title.replace('Catálogos', 'Mesa Abierta')} · Acceso privado`,
+        description: 'Panel privado para administrar restaurantes y catálogos autorizados.',
+        path: window.location.pathname,
+        robots: 'noindex,nofollow,noarchive',
+      });
   }
 
   function renderLoading(message = 'Conectando de forma segura') {
@@ -41,7 +47,7 @@
       <main class="admin-auth-shell">
         <section class="admin-auth-intro">
           <a class="wordmark admin-wordmark" href="${window.CatalogRouter.path('/r/mesa-limon/')}" >
-            <span class="wordmark-icon">M</span><span>Menú digital</span>
+            <span class="wordmark-icon">M</span><span>Mesa Abierta</span>
           </a>
           <div class="auth-intro-copy">
             <p class="eyebrow">${eyebrow}</p>
@@ -236,7 +242,7 @@
     appRoot.innerHTML = `
       <div class="admin-app-shell">
         <header class="admin-topbar">
-          <a class="wordmark" href="${window.CatalogRouter.path(`/r/${encodeURIComponent(restaurant.slug)}/`)}"><span class="wordmark-icon">M</span><span>Menú digital</span></a>
+            <a class="wordmark" href="${window.CatalogRouter.path(`/r/${encodeURIComponent(restaurant.slug)}/`)}"><span class="wordmark-icon">M</span><span>Mesa Abierta</span></a>
           <div class="admin-top-actions">
             <span class="admin-user-email">${escapeHtml(session.user.email || '')}</span>
             <a class="admin-preview-link" href="${window.CatalogRouter.path(`/r/${encodeURIComponent(restaurant.slug)}/`)}" target="_blank" rel="noreferrer">Ver catálogo ↗</a>

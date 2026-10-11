@@ -1,6 +1,6 @@
-# Catálogos digitales multirrestaurante
+# Mesa Abierta | Catálogos digitales multirrestaurante
 
-Frontend estático de demostración, hecho con HTML, CSS y JavaScript nativos. No requiere `npm install`, paquetes ni compilación. Los restaurantes, platos, precios, horarios e imágenes del catálogo actual son contenido de demostración, no información de negocios reales.
+**Mesa Abierta** es el nombre de trabajo de la plataforma. No es un nombre legal ni se ha comprobado su disponibilidad de marca/dominio. El frontend usa HTML, CSS y JavaScript nativos; no requiere `npm install`, paquetes ni compilación. Los restaurantes, platos, precios, horarios e imágenes de ejemplo están marcados como demostración y no representan negocios reales.
 
 ## Probar en local
 
@@ -10,7 +10,7 @@ Se requiere una instalación existente de Node.js únicamente para el servidor l
 node server.js
 ```
 
-Abre `http://127.0.0.1:4173/r/mesa-limon/` o `http://127.0.0.1:4173/r/patio-bruma/`. También puedes abrir `/admin/` para ver el aviso de que el panel aún no forma parte de esta fase. `server.js` usa solo módulos incluidos en Node y sirve `index.html` para las rutas de la aplicación.
+Abre `http://127.0.0.1:4173/` para el directorio, `/r/mesa-limon/` o `/r/patio-bruma/` para los catálogos y `/admin/` para administración. `server.js` usa solo módulos incluidos en Node; sirve el `index.html` de carpetas existentes y usa el SPA fallback para el resto.
 
 ## Rutas y hosting estático
 
@@ -20,18 +20,23 @@ La aplicación reconoce `/r/{slug}/` y `/admin/` leyendo `window.location.pathna
 
 Se añadió `.github/workflows/pages.yml`: al hacer push a `main`, GitHub Actions publica el sitio estático sin instalar dependencias ni ejecutar una compilación. `.nojekyll` evita transformaciones del árbol por Jekyll. `404.html` conserva rutas profundas como `/NOMBRE-DEL-REPOSITORIO/r/mesa-limon/`; `index.html` restaura esa ruta y mantiene el prefijo de proyecto en assets y enlaces. En GitHub, selecciona **Settings → Pages → Build and deployment → GitHub Actions**. Los enlaces profundos deben verificarse una vez que el repositorio esté publicado.
 
-GitHub Pages sirve el contenido como sitio público. No publiques datos privados allí. La clave `sb_publishable` puede aparecer en el frontend únicamente con RLS correcta; la URL y la clave pública están configuradas, pero Auth no podrá operar correctamente hasta aplicar la migración y crear una membresía autorizada. Pages se prepara aquí para desarrollo/demostración; no se declara como proveedor comercial verificado.
+GitHub Pages sirve el contenido como sitio público. No publiques datos privados allí. La clave `sb_publishable` puede aparecer en el frontend únicamente con RLS correcta; la URL y la clave pública están configuradas, pero Auth no podrá operar correctamente hasta aplicar la migración y crear una membresía autorizada. Pages se usa para esta demo pública, no se declara como proveedor comercial verificado.
 
-No hay directorio de restaurantes en la raíz: entra directamente a `/Menus/r/{slug}/` o `/Menus/admin/`. Por ejemplo, el catálogo de demostración está en `https://osorioosiel990-design.github.io/Menus/r/mesa-limon/`.
+La portada lista restaurantes con catálogo activo consultados con clave pública y RLS. Mientras la tabla no exista o no se pueda consultar, aparecen únicamente las dos fichas de demostración con esa etiqueta. Ejemplos publicados: [Mesa Limón](https://osorioosiel990-design.github.io/Menus/r/mesa-limon/) y [Patio Bruma](https://osorioosiel990-design.github.io/Menus/r/patio-bruma/). El panel está en [Administración](https://osorioosiel990-design.github.io/Menus/admin/).
 
-El repositorio previsto es `osorioosiel990-design/Menus`, pero aún no se ha creado ni publicado: la autenticación GitHub disponible en este equipo caducó y el entorno no pudo conectar al servicio de device login. Cuando GitHub CLI tenga una sesión válida para `osorioosiel990-design`, crea el repo público (Pages gratuito requiere sitio público en este caso) y sube la rama `main`:
+El repositorio público es `osorioosiel990-design/Menus`. `.github/workflows/pages.yml` publica al hacer push a `main` y reconstruye el sitemap cada día. GitHub Pages está configurado con **GitHub Actions**. El flujo usa solo Node incluido en el runner, sin instalar paquetes.
 
-```powershell
-gh auth login -h github.com
-gh repo create Menus --public --source=. --remote=origin --push
-```
+El `404.html` conserva rutas profundas; para los restaurantes activos, el workflow también genera `r/{slug}/index.html` con contenido SEO estático, así que las páginas publicadas de esos restaurantes reciben una respuesta normal antes de hidratar el catálogo dinámico.
 
-Después verifica en **Settings → Pages** que la fuente sea **GitHub Actions**. El workflow `.github/workflows/pages.yml` publica en cada push a `main`; la URL esperada es `https://osorioosiel990-design.github.io/Menus/`. No ejecutes el despliegue hasta confirmar que el proyecto no contiene datos privados y que RLS está activa.
+### SEO y Google
+
+- Portada y restaurantes tienen títulos, descripciones, URL canonical, Open Graph/Twitter, encabezados semánticos e información estructurada JSON-LD. El directorio muestra enlaces HTML rastreables a cada catálogo activo.
+- `/admin/` se sirve desde `admin/index.html` con `noindex,nofollow,noarchive`; el panel privado no debe aparecer en Google.
+- En cada despliegue el workflow consulta solo slugs activos con la clave pública, genera páginas prerenderizadas y `sitemap.xml`. Una tarea diaria vuelve a generar sitemap/páginas para incorporar cambios, con demora potencial de hasta un día. Sin esquema disponible, el sitemap incluye solamente la portada.
+- La base de GitHub Pages para este proyecto es `https://osorioosiel990-design.github.io/Menus/`. En GitHub Pages de proyecto, `robots.txt` se sirve bajo `/Menus/robots.txt`, no bajo la raíz del host como requiere el estándar de robots; por eso no se promete su descubrimiento automático. Registra manualmente `https://osorioosiel990-design.github.io/Menus/sitemap.xml` en [Google Search Console](https://search.google.com/search-console) y usa inspección de URL para solicitar rastreo. Para control SEO completo del host raíz, haría falta dominio propio o publicar en un sitio de usuario.
+- SEO no garantiza una posición concreta ni indexación inmediata. Google suele tardar días en volver a rastrear. El Rich Results Test ayuda a validar Restaurant JSON-LD; Search Console verifica el resultado en el índice.
+
+El nombre **Mesa Abierta** es una propuesta de marca para la plataforma, no para cada restaurante. Los restaurantes conservan sus propios nombres y slugs.
 
 Slugs demo disponibles: `mesa-limon`, `patio-bruma` y `demo-inactivo`. Los otros slugs muestran un estado de catálogo inexistente. El buscador y los filtros se ejecutan en el navegador sobre los datos demo actuales.
 
@@ -43,10 +48,11 @@ La migración versionada está en `supabase/migrations/20261011000100_initial_ca
 
 1. Crea un proyecto Supabase desde el panel oficial. No hace falta comprar un plan para realizar estas pruebas; no actives servicios de pago.
 2. En **SQL Editor**, abre una consulta nueva, copia el contenido de la migración completa y ejecútala. Confirma que el panel indica éxito antes de continuar. Esta ejecución manual no se registra automáticamente en el historial local de migraciones de Supabase CLI.
-3. En **Authentication → Settings**, desactiva los registros públicos. En **Authentication → Providers**, habilita solo los métodos necesarios (para la primera versión, correo/contraseña); crea o invita usuarios desde **Authentication → Users**. No concedas roles según datos enviados por el navegador.
-4. Crea primero el usuario en Authentication y copia su UUID desde la lista de usuarios. En SQL Editor ejecuta el bloque de bootstrap que sigue, reemplazando el UUID y el slug de ejemplo. El bloque debe ejecutarse con el rol privilegiado del SQL Editor, nunca desde el frontend.
-5. Mantén `is_active = false` durante la preparación. Tras comprobar los datos y el catálogo, el owner podrá activar el restaurante desde el panel cuando esa función se implemente; en esta fase la activación puede hacerse manualmente en SQL Editor.
-6. Para registrar otro negocio, repite el bloque con un slug nuevo y un usuario ya creado o invitado. Asigna cada miembro mediante SQL Editor. Los clientes API no tienen permisos para insertar, cambiar ni borrar filas en `restaurant_members`.
+3. En **Project Settings → Data API**, confirma que `public` esté entre los esquemas expuestos. Las versiones recientes no exponen automáticamente todas las tablas nuevas. La migración ya otorga grants explícitos y habilita RLS; ambos requisitos son necesarios para el directorio anónimo.
+4. En **Authentication → Settings**, desactiva los registros públicos. En **Authentication → Providers**, habilita solo los métodos necesarios (para la primera versión, correo/contraseña); crea o invita usuarios desde **Authentication → Users**. No concedas roles según datos enviados por el navegador.
+5. Crea primero el usuario en Authentication y copia su UUID desde la lista de usuarios. En SQL Editor ejecuta el bloque de bootstrap que sigue, reemplazando el UUID y el slug de ejemplo. El bloque debe ejecutarse con el rol privilegiado del SQL Editor, nunca desde el frontend.
+6. Mantén `is_active = false` durante la preparación. Tras comprobar los datos y el catálogo, el owner podrá activar el restaurante desde el panel cuando esa función se implemente; en esta fase la activación puede hacerse manualmente en SQL Editor.
+7. Para registrar otro negocio, repite el bloque con un slug nuevo y un usuario ya creado o invitado. Asigna cada miembro mediante SQL Editor. Los clientes API no tienen permisos para insertar, cambiar ni borrar filas en `restaurant_members`.
 
 ```sql
 do $$
@@ -77,9 +83,9 @@ $$;
 
 La web solo podrá usar la URL del proyecto y la clave pública `sb_publishable_…` (o la clave `anon` heredada), con estas políticas activas. La clave secreta `sb_secret_…` y la `service_role` nunca se ponen en JavaScript, HTML, repositorios ni variables que se empaqueten para el navegador. Si una clave secreta se compartió o publicó, revócala o rótala en el panel de Supabase antes de continuar. El proyecto contiene únicamente la clave publicable proporcionada.
 
-## Alcance aún pendiente
+## Estado de Supabase
 
-La ruta `/admin/` ya incluye login, cierre de sesión, recuperación de contraseña, selección de restaurante y edición de ficha/colores mediante la API REST de Supabase. `src/config.js` tiene la Project URL y la clave publicable proporcionadas. Se comprobó una lectura anónima al API: el proyecto responde, pero `public.restaurants` aún no está en su esquema (`PGRST205`), por lo que no se ha confirmado la migración y el login/CRUD real todavía no se pueden validar.
+La ruta `/admin/` incluye login, cierre de sesión, recuperación, selección de restaurante y edición de ficha/colores. `src/config.js` tiene URL y clave publicable. La última lectura anónima a `restaurants` falló porque la tabla no existía/estaba expuesta; por eso no se han validado todavía la lista real, el login o cambios contra Supabase. Tras aplicar migración y revisar **Data API → Exposed schemas**, el directorio y las páginas generadas consultarán restaurantes activos por RLS. CRUD de productos/categorías e imágenes sigue pendiente.
 
 ### Configurar acceso para la fase 4
 

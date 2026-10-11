@@ -4,7 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f2eb" />
-    <meta name="description" content="Catálogo digital de restaurante." />
+    <meta name="description" content="Encuentra restaurantes independientes y consulta sus catálogos digitales en Mesa Abierta." />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta property="og:site_name" content="Mesa Abierta" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Mesa Abierta | Catálogos digitales de restaurantes" />
+    <meta property="og:description" content="Explora restaurantes y encuentra qué disfrutar cerca de ti." />
+    <meta name="twitter:card" content="summary" />
+    <!-- DIRECTORY_JSON_LD -->
     <script>
       (function () {
         var parameters = new URLSearchParams(window.location.search);
@@ -27,6 +34,10 @@
         stylesheet.rel = 'stylesheet';
         stylesheet.href = basePath + 'src/styles.css';
         document.head.appendChild(stylesheet);
+        var canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        canonical.href = window.location.origin + basePath;
+        document.head.appendChild(canonical);
         if (!encodedRoute) return;
         parameters.delete('__route');
         var remainingQuery = parameters.toString();
@@ -37,10 +48,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
-    <title>Catálogo digital</title>
+    <title>Mesa Abierta | Catálogos digitales de restaurantes</title>
   </head>
   <body>
-    <div id="app" aria-live="polite"></div>
+    <div id="app" aria-live="polite">
+      <main class="directory-shell">
+        <header class="directory-topbar"><a class="directory-brand" href="./"><span class="brand-symbol">M</span><span>Mesa Abierta</span></a><span class="directory-top-note">RESTAURANTES INDEPENDIENTES</span></header>
+        <section class="directory-hero"><p class="eyebrow">UN BUEN LUGAR PARA EMPEZAR</p><h1>Encuentra tu próxima mesa<span>.</span></h1><p>Explora restaurantes, descubre sus propuestas y abre sus catálogos digitales.</p></section>
+        <section class="directory-list" aria-label="Restaurantes disponibles">
+          <!-- DIRECTORY_CARDS_START -->
+          <article class="directory-row"><a class="directory-row-link" href="./r/mesa-limon/"><span class="directory-row-image"><span class="directory-monogram">M</span></span><span class="directory-row-copy"><span class="directory-row-name">Mesa Limón</span><span class="directory-row-description">Cocina fresca para compartir, hecha al ritmo de la temporada.</span></span><span class="directory-row-tag is-demo">DEMOSTRACIÓN</span><span class="directory-row-arrow" aria-hidden="true">↗</span></a></article>
+          <article class="directory-row"><a class="directory-row-link" href="./r/patio-bruma/"><span class="directory-row-image"><span class="directory-monogram">P</span></span><span class="directory-row-copy"><span class="directory-row-name">Patio Bruma</span><span class="directory-row-description">Un menú breve, sabores al fuego y sobremesas sin prisa.</span></span><span class="directory-row-tag is-demo">DEMOSTRACIÓN</span><span class="directory-row-arrow" aria-hidden="true">↗</span></a></article>
+          <!-- DIRECTORY_CARDS_END -->
+        </section>
+      </main>
+    </div>
     <script>
       (function loadApplicationScripts(files) {
         if (!files.length) return;
@@ -55,6 +77,7 @@
         'src/data/demoRestaurants.js',
         'src/router.js',
         'src/config.js',
+        'src/seo.js',
         'src/supabaseRest.js',
         'src/admin.js',
         'src/main.js',
