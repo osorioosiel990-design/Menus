@@ -22,14 +22,14 @@ Se añadió `.github/workflows/pages.yml`: al hacer push a `main`, GitHub Action
 
 GitHub Pages sirve el contenido como sitio público. No publiques datos privados allí. La clave `sb_publishable` puede aparecer en el frontend únicamente con RLS correcta; la URL y la clave pública están configuradas, pero Auth no podrá operar correctamente hasta aplicar la migración y crear una membresía autorizada. Pages se prepara aquí para desarrollo/demostración; no se declara como proveedor comercial verificado.
 
-El repositorio previsto es `OsielOsorio9/Menus`, pero aún no se ha creado ni publicado: la autenticación GitHub disponible en este equipo caducó y el entorno no pudo conectar al servicio de device login. Cuando GitHub CLI tenga una sesión válida, crea el repo público (Pages gratuito requiere sitio público en este caso) y sube la rama `main`:
+El repositorio previsto es `osorioosiel990-design/Menus`, pero aún no se ha creado ni publicado: la autenticación GitHub disponible en este equipo caducó y el entorno no pudo conectar al servicio de device login. Cuando GitHub CLI tenga una sesión válida para `osorioosiel990-design`, crea el repo público (Pages gratuito requiere sitio público en este caso) y sube la rama `main`:
 
 ```powershell
 gh auth login -h github.com
 gh repo create Menus --public --source=. --remote=origin --push
 ```
 
-Después verifica en **Settings → Pages** que la fuente sea **GitHub Actions**. El workflow `.github/workflows/pages.yml` publica en cada push a `main`; la URL esperada es `https://osielosorio9.github.io/Menus/`. No ejecutes el despliegue hasta confirmar que el proyecto no contiene datos privados y que RLS está activa.
+Después verifica en **Settings → Pages** que la fuente sea **GitHub Actions**. El workflow `.github/workflows/pages.yml` publica en cada push a `main`; la URL esperada es `https://osorioosiel990-design.github.io/Menus/`. No ejecutes el despliegue hasta confirmar que el proyecto no contiene datos privados y que RLS está activa.
 
 Slugs demo disponibles: `mesa-limon`, `patio-bruma` y `demo-inactivo`. Los otros slugs muestran un estado de catálogo inexistente. El buscador y los filtros se ejecutan en el navegador sobre los datos demo actuales.
 
