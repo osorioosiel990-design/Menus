@@ -373,7 +373,7 @@
   async function onSaveProfile(event) {
     event.preventDefault();
     const restaurant = selectedRestaurant();
-    if (!restaurant || !['owner', 'admin'].includes(restaurant.role)) return;
+    if (!restaurant || !['owner', 'admin', 'super_admin'].includes(restaurant.role)) return;
     const form = event.currentTarget;
     const status = form.querySelector('#profile-save-status');
     const button = form.querySelector('button[type="submit"]');
