@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abriendo catálogo</title>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        var segments = path.split('/').filter(Boolean);
+        var routeIndex = -1;
+        segments.forEach(function (segment, index) {
+          if ((segment === 'r' && segments.length - index === 2) || (segment === 'admin' && segments.length - index === 1)) routeIndex = index;
+        });
+        if (routeIndex < 0) return;
+        var basePath = routeIndex > 0 ? '/' + segments.slice(0, routeIndex).join('/') : '';
+        var routePath = '/' + segments.slice(routeIndex).join('/');
+        var redirect = basePath + '/?__route=' + encodeURIComponent(routePath + window.location.search) + window.location.hash;
+        window.location.replace(redirect);
+      })();
+    </script>
+  </head>
+  <body>Abriendo catálogo…</body>
+</html>

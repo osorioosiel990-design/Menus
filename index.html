@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f2eb" />
+    <meta name="description" content="Catálogo digital de restaurante." />
+    <script>
+      (function () {
+        var parameters = new URLSearchParams(window.location.search);
+        var encodedRoute = parameters.get('__route');
+        var segments = window.location.pathname.split('/').filter(Boolean);
+        var routeIndex = -1;
+        segments.forEach(function (segment, index) {
+          if ((segment === 'r' && segments.length - index === 2) || (segment === 'admin' && segments.length - index === 1)) routeIndex = index;
+        });
+        var basePath = encodedRoute
+          ? window.location.pathname.replace(/\/?$/, '/')
+          : routeIndex > 0 ? '/' + segments.slice(0, routeIndex).join('/') + '/' : '/';
+        var baseElement = document.createElement('base');
+        baseElement.href = basePath;
+        document.head.appendChild(baseElement);
+        window.CATALOG_BASE_PATH = basePath;
+        var stylesheet = document.createElement('link');
+        stylesheet.rel = 'stylesheet';
+        stylesheet.href = basePath + 'src/styles.css';
+        document.head.appendChild(stylesheet);
+        if (!encodedRoute) return;
+        parameters.delete('__route');
+        var remainingQuery = parameters.toString();
+        var route = encodedRoute;
+        window.history.replaceState(null, '', basePath.replace(/\/$/, '') + route + (remainingQuery ? '?' + remainingQuery : '') + window.location.hash);
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+    <title>Catálogo digital</title>
+  </head>
+  <body>
+    <div id="app" aria-live="polite"></div>
+    <script>
+      (function loadApplicationScripts(files) {
+        if (!files.length) return;
+        var script = document.createElement('script');
+        script.src = window.CATALOG_BASE_PATH + files.shift();
+        script.onload = function () { loadApplicationScripts(files); };
+        script.onerror = function () {
+          document.querySelector('#app').innerHTML = '<main class="message-screen"><h1>No se pudo cargar la aplicación</h1><p>Comprueba la conexión e inténtalo de nuevo.</p></main>';
+        };
+        document.body.appendChild(script);
+      })([
+        'src/data/demoRestaurants.js',
+        'src/router.js',
+        'src/config.js',
+        'src/supabaseRest.js',
+        'src/admin.js',
+        'src/main.js',
+      ]);
+    </script>
+  </body>
+</html>
