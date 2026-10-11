@@ -16,7 +16,9 @@
         });
         var basePath = encodedRoute
           ? window.location.pathname.replace(/\/?$/, '/')
-          : routeIndex > 0 ? '/' + segments.slice(0, routeIndex).join('/') + '/' : '/';
+          : routeIndex > 0 ? '/' + segments.slice(0, routeIndex).join('/') + '/'
+            : routeIndex < 0 && segments.length === 1 ? '/' + segments[0] + '/'
+              : '/';
         var baseElement = document.createElement('base');
         baseElement.href = basePath;
         document.head.appendChild(baseElement);
