@@ -30,9 +30,10 @@
         baseElement.href = basePath;
         document.head.appendChild(baseElement);
         window.CATALOG_BASE_PATH = basePath;
+        window.CATALOG_ASSET_VERSION = '__ASSET_VERSION__';
         var stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
-        stylesheet.href = basePath + 'src/styles.css';
+        stylesheet.href = basePath + 'src/styles.css?v=' + window.CATALOG_ASSET_VERSION;
         document.head.appendChild(stylesheet);
         var canonical = document.createElement('link');
         canonical.rel = 'canonical';
@@ -67,7 +68,7 @@
       (function loadApplicationScripts(files) {
         if (!files.length) return;
         var script = document.createElement('script');
-        script.src = window.CATALOG_BASE_PATH + files.shift();
+        script.src = window.CATALOG_BASE_PATH + files.shift() + '?v=' + window.CATALOG_ASSET_VERSION;
         script.onload = function () { loadApplicationScripts(files); };
         script.onerror = function () {
           document.querySelector('#app').innerHTML = '<main class="message-screen"><h1>No se pudo cargar la aplicación</h1><p>Comprueba la conexión e inténtalo de nuevo.</p></main>';

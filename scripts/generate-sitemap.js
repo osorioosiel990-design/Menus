@@ -6,6 +6,7 @@ vm.runInNewContext(fs.readFileSync('src/config.js', 'utf8'), configContext);
 const config = configContext.window.CATALOG_CONFIG;
 const [owner, repository] = (process.env.GITHUB_REPOSITORY || 'osorioosiel990-design/Menus').split('/');
 const siteRoot = (process.env.PAGES_SITE_URL || `https://${owner}.github.io/${repository}/`).replace(/\/?$/, '/');
+const assetVersion = process.env.GITHUB_SHA || process.env.ASSET_VERSION || 'local';
 const escapeXml = (value) => String(value).replace(/[<>&'\"]/g, (character) => ({
   '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;',
 }[character]));
@@ -83,7 +84,7 @@ function renderRestaurantPage(restaurant, canonicalUrl) {
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../../src/styles.css" />
+    <link rel="stylesheet" href="../../src/styles.css?v=${encodeURIComponent(assetVersion)}" />
     <meta property="og:site_name" content="Mesa Abierta" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${escapeHtml(title)}" />
@@ -95,7 +96,7 @@ function renderRestaurantPage(restaurant, canonicalUrl) {
     <meta name="twitter:description" content="${description}" />
     <script id="page-structured-data" type="application/ld+json">${escapeJsonLd(structuredData)}</script>
     <title>${escapeHtml(title)}</title>
-    <script>window.CATALOG_BASE_PATH = new URL('../../', window.location.href).pathname;</script>
+    <script>window.CATALOG_BASE_PATH = new URL('../../', window.location.href).pathname; window.CATALOG_ASSET_VERSION = '${escapeHtml(assetVersion)}';</script>
   </head>
   <body>
     <div id="app" aria-live="polite">
@@ -104,13 +105,13 @@ function renderRestaurantPage(restaurant, canonicalUrl) {
         <main class="seo-restaurant-page"><div class="seo-restaurant-art">${cover}</div><p class="eyebrow">CATÁLOGO PÚBLICO</p><h1>${name}</h1><p>${description}</p><a class="admin-preview-link" href="./">Abrir menú digital ↗</a></main>
       </div>
     </div>
-    <script defer src="src/data/demoRestaurants.js"></script>
-    <script defer src="src/router.js"></script>
-    <script defer src="src/config.js"></script>
-    <script defer src="src/seo.js"></script>
-    <script defer src="src/supabaseRest.js"></script>
-    <script defer src="src/admin.js"></script>
-    <script defer src="src/main.js"></script>
+    <script defer src="src/data/demoRestaurants.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/router.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/config.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/seo.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/supabaseRest.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/admin.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/main.js?v=${encodeURIComponent(assetVersion)}"></script>
   </body>
 </html>
 `;
@@ -163,7 +164,11 @@ function renderDirectoryHtml(html, restaurants) {
 
 function updateDirectoryHtml(restaurants) {
   const html = fs.readFileSync('index.html', 'utf8');
-  fs.writeFileSync('index.html', renderDirectoryHtml(html, restaurants));
+  fs.writeFileSync('index.html', renderDirectoryHtml(html, restaurants).replaceAll('__ASSET_VERSION__', assetVersion));
+  const adminIndexPath = 'admin/index.html';
+  if (fs.existsSync(adminIndexPath)) {
+    fs.writeFileSync(adminIndexPath, fs.readFileSync(adminIndexPath, 'utf8').replaceAll('__ASSET_VERSION__', assetVersion));
+  }
 }
 
 async function main() {

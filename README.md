@@ -31,6 +31,7 @@ El `404.html` conserva rutas profundas; para los restaurantes activos, el workfl
 ### SEO y Google
 
 - Portada y restaurantes tienen títulos, descripciones, URL canonical, Open Graph/Twitter, encabezados semánticos e información estructurada JSON-LD. El directorio muestra enlaces HTML rastreables a cada catálogo activo.
+- CSS y JavaScript se solicitan con una versión basada en el commit de despliegue para reducir la posibilidad de que Google procese un bundle antiguo y obtenga metadatos inconsistentes.
 - `/admin/` se sirve desde `admin/index.html` con `noindex,nofollow,noarchive`; el panel privado no debe aparecer en Google.
 - En cada despliegue el workflow consulta solo slugs activos con la clave pública, genera páginas prerenderizadas y `sitemap.xml`. Una tarea diaria vuelve a generar sitemap/páginas para incorporar cambios, con demora potencial de hasta un día. Sin esquema disponible, el sitemap incluye solamente la portada.
 - La base de GitHub Pages para este proyecto es `https://osorioosiel990-design.github.io/Menus/`. En GitHub Pages de proyecto, `robots.txt` se sirve bajo `/Menus/robots.txt`, no bajo la raíz del host como requiere el estándar de robots; por eso no se promete su descubrimiento automático. Registra manualmente `https://osorioosiel990-design.github.io/Menus/sitemap.xml` en [Google Search Console](https://search.google.com/search-console) y usa inspección de URL para solicitar rastreo. Para control SEO completo del host raíz, haría falta dominio propio o publicar en un sitio de usuario.
