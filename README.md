@@ -22,6 +22,8 @@ Se añadió `.github/workflows/pages.yml`: al hacer push a `main`, GitHub Action
 
 GitHub Pages sirve el contenido como sitio público. No publiques datos privados allí. La clave `sb_publishable` puede aparecer en el frontend únicamente con RLS correcta; la URL y la clave pública están configuradas, pero Auth no podrá operar correctamente hasta aplicar la migración y crear una membresía autorizada. Pages se prepara aquí para desarrollo/demostración; no se declara como proveedor comercial verificado.
 
+No hay directorio de restaurantes en la raíz: entra directamente a `/Menus/r/{slug}/` o `/Menus/admin/`. Por ejemplo, el catálogo de demostración está en `https://osorioosiel990-design.github.io/Menus/r/mesa-limon/`.
+
 El repositorio previsto es `osorioosiel990-design/Menus`, pero aún no se ha creado ni publicado: la autenticación GitHub disponible en este equipo caducó y el entorno no pudo conectar al servicio de device login. Cuando GitHub CLI tenga una sesión válida para `osorioosiel990-design`, crea el repo público (Pages gratuito requiere sitio público en este caso) y sube la rama `main`:
 
 ```powershell
