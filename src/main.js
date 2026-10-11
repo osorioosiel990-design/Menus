@@ -313,7 +313,7 @@ function renderCatalog(restaurant) {
     description: seoDescription,
     path: canonicalPath,
     image: cover || restaurant.logo_url || undefined,
-    robots: restaurant.isDemo ? 'noindex,follow' : 'index,follow,max-image-preview:large',
+    robots: 'index,follow,max-image-preview:large',
     data: restaurant.isDemo ? undefined : restaurantStructuredData(restaurant, canonicalUrl),
   });
   const categoryButtons = [
