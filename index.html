@@ -64,25 +64,6 @@
         </section>
       </main>
     </div>
-    <script>
-      (function loadApplicationScripts(files) {
-        if (!files.length) return;
-        var script = document.createElement('script');
-        script.src = window.CATALOG_BASE_PATH + files.shift() + '?v=' + window.CATALOG_ASSET_VERSION;
-        script.onload = function () { loadApplicationScripts(files); };
-        script.onerror = function () {
-          document.querySelector('#app').innerHTML = '<main class="message-screen"><h1>No se pudo cargar la aplicación</h1><p>Comprueba la conexión e inténtalo de nuevo.</p></main>';
-        };
-        document.body.appendChild(script);
-      })([
-        'src/data/demoRestaurants.js',
-        'src/router.js',
-        'src/config.js',
-        'src/seo.js',
-        'src/supabaseRest.js',
-        'src/admin.js',
-        'src/main.js',
-      ]);
-    </script>
+    <script type="module" src="./src/ui/legacy-entry.jsx"></script>
   </body>
 </html>

@@ -1,16 +1,26 @@
 # Menú Abierto | Catálogos digitales multirrestaurante
 
-**Menú Abierto** es el nombre de trabajo de la plataforma. No es un nombre legal ni se ha comprobado su disponibilidad de marca/dominio. El frontend usa HTML, CSS y JavaScript nativos; no requiere `npm install`, paquetes ni compilación. Los restaurantes, platos, precios, horarios e imágenes de ejemplo están marcados como demostración y no representan negocios reales.
+**Menú Abierto** es el nombre de trabajo de la plataforma. No es un nombre legal ni se ha comprobado su disponibilidad de marca/dominio. La interfaz combina React con las vistas y operaciones existentes, y Vite genera el sitio estático de publicación. Los restaurantes, platos, precios, horarios e imágenes de ejemplo están marcados como demostración y no representan negocios reales.
 
 ## Probar en local
 
-Se requiere una instalación existente de Node.js únicamente para el servidor local. Desde esta carpeta ejecuta:
+Se requiere Node.js 22 o posterior. Instala las dependencias y levanta el servidor de desarrollo desde esta carpeta:
 
 ```powershell
-node server.js
+npm ci
+npm run dev
 ```
 
-Abre `http://127.0.0.1:4173/` para el directorio, `/negocios/` para conocer el servicio, `/r/mesa-limon/` o `/r/patio-bruma/` para los catálogos y `/admin/` para administración. `server.js` usa solo módulos incluidos en Node; sirve el `index.html` de carpetas existentes y usa el SPA fallback para el resto.
+Abre `http://127.0.0.1:4173/` para el directorio, `/negocios/` para conocer el servicio, `/r/mesa-limon/` o `/r/patio-bruma/` para los catálogos y `/admin/` para administración. `node server.js` también inicia este mismo servidor Vite de desarrollo.
+
+Para generar y verificar el sitio publicable localmente:
+
+```powershell
+npm run build
+npm run preview
+```
+
+Vite y los scripts de SEO dejan el sitio estático en `dist/`. El build genera páginas comerciales y de restaurantes con contenido HTML indexable, metadatos y JSON-LD; los datos y operaciones de la aplicación siguen usando las integraciones existentes.
 
 ## Rutas y hosting estático
 
@@ -18,24 +28,24 @@ La aplicación reconoce `/`, `/negocios/`, `/admin/` y `/r/{slug}/` leyendo `win
 
 ### GitHub Pages
 
-Se añadió `.github/workflows/pages.yml`: al hacer push a `main`, GitHub Actions publica el sitio estático sin instalar dependencias ni ejecutar una compilación. `.nojekyll` evita transformaciones del árbol por Jekyll. `404.html` conserva rutas profundas como `/NOMBRE-DEL-REPOSITORIO/r/mesa-limon/`; `index.html` restaura esa ruta y mantiene el prefijo de proyecto en assets y enlaces. En GitHub, selecciona **Settings → Pages → Build and deployment → GitHub Actions**. Los enlaces profundos deben verificarse una vez que el repositorio esté publicado.
+Se añadió `.github/workflows/pages.yml`: al hacer push a `main`, GitHub Actions instala dependencias con `npm ci`, compila el sitio estático y lo publica desde `dist/`. `.nojekyll` evita transformaciones del árbol por Jekyll. `404.html` conserva rutas profundas como `/NOMBRE-DEL-REPOSITORIO/r/mesa-limon/`; `index.html` restaura esa ruta y mantiene el prefijo de proyecto en assets y enlaces. En GitHub, selecciona **Settings → Pages → Build and deployment → GitHub Actions**. Los enlaces profundos deben verificarse una vez que el repositorio esté publicado.
 
 GitHub Pages sirve el contenido como sitio público. No publiques datos privados allí. La clave `sb_publishable` puede aparecer en el frontend únicamente con RLS correcta; la URL y la clave pública están configuradas, pero Auth no podrá operar correctamente hasta aplicar la migración y crear una membresía autorizada. Pages se usa para esta demo pública, no se declara como proveedor comercial verificado.
 
 La portada lista restaurantes con catálogo activo consultados con clave pública y RLS. Mientras la tabla no exista o no se pueda consultar, aparecen únicamente las dos fichas de demostración con esa etiqueta. Ejemplos publicados: [Mesa Limón](https://osorioosiel990-design.github.io/Menus/r/mesa-limon/) y [Patio Bruma](https://osorioosiel990-design.github.io/Menus/r/patio-bruma/). El panel está en [Administración](https://osorioosiel990-design.github.io/Menus/admin/).
 
-El repositorio público es `osorioosiel990-design/Menus`. `.github/workflows/pages.yml` publica al hacer push a `main` y reconstruye el sitemap cada día. GitHub Pages está configurado con **GitHub Actions**. El flujo usa solo Node incluido en el runner, sin instalar paquetes.
+El repositorio público es `osorioosiel990-design/Menus`. `.github/workflows/pages.yml` publica al hacer push a `main` y reconstruye el sitemap cada día. GitHub Pages está configurado con **GitHub Actions**. El flujo usa Node.js 22 y las dependencias fijadas en `package-lock.json`.
 
 ### Cloudflare Pages
 
-Para publicar la misma web en Cloudflare, conecta el repositorio desde **Workers & Pages → Create application → Pages → Connect to Git** y elige la rama `main`. Usa preset **None**, raíz `/`, comando de compilación `node scripts/generate-sitemap.js` y carpeta de salida `.`. No hace falta instalar paquetes. El comando genera el HTML SEO de `/negocios/`, las páginas de restaurantes y el sitemap antes de cada publicación. `_redirects` mantiene el fallback de las rutas de la app.
+Para publicar la misma web en Cloudflare, conecta el repositorio desde **Workers & Pages → Create application → Pages → Connect to Git** y elige la rama `main`. Usa preset **None**, raíz `/`, comando de compilación `npm ci && npm run build` y carpeta de salida `dist`. El build genera el HTML SEO de `/negocios/`, las páginas de restaurantes y el sitemap antes de cada publicación. `_redirects` mantiene el fallback de las rutas de la app.
 
 El `404.html` conserva rutas profundas; el workflow genera `negocios/index.html` y, para los restaurantes activos, `r/{slug}/index.html` con contenido SEO estático. El sitemap incluye la página para negocios y los catálogos publicados.
 
 ### SEO y Google
 
 - Portada, página comercial y restaurantes tienen títulos, descripciones, URL canonical, Open Graph/Twitter e información estructurada JSON-LD.
-- La página `/negocios/` publica el Plan Básico: 1.500 CUP mensual; 3.915 CUP por trimestre (13% de descuento); 7.650 CUP por seis meses (15%); y 14.400 CUP por año (20%). Enlaza a WhatsApp, pero no procesa pagos.
+- La página `/negocios/` publica el Plan Básico: 2.000 CUP mensual; 5.500 CUP por trimestre; 10.000 CUP por seis meses; y 18.000 CUP por año. El pago de los planes se realiza mediante transferencia por Transfermóvil; la página también enlaza a WhatsApp.
 - El panel de administración genera un QR vectorial SVG del catálogo público para descargar o imprimir. La librería QR se carga de forma diferida desde jsDelivr con versión e integridad fijadas.
 - CSS y JavaScript se solicitan con una versión basada en el commit de despliegue para reducir la posibilidad de que Google procese un bundle antiguo y obtenga metadatos inconsistentes.
 - `/admin/` se sirve con `noindex,nofollow,noarchive`; el panel privado no debe aparecer en Google.
@@ -55,12 +65,12 @@ El acceso global se añade mediante `supabase/migrations/20261011000200_platform
 ### Aplicación manual sin instalar herramientas
 
 1. Crea un proyecto Supabase desde el panel oficial. No hace falta comprar un plan para realizar estas pruebas; no actives servicios de pago.
-2. En **SQL Editor**, abre una consulta nueva, copia y ejecuta primero el contenido de `20261011000100_initial_catalog_schema.sql`; después ejecuta `20261011000200_platform_super_admin.sql`. Confirma éxito en ambos casos. No vuelvas a ejecutar la migración inicial si ya se aplicó; en ese caso ejecuta solo la aditiva. La ejecución manual no se registra en el historial local de Supabase CLI.
+2. En **SQL Editor**, abre una consulta nueva, copia y ejecuta primero el contenido de `20261011000100_initial_catalog_schema.sql`; después ejecuta `20261011000200_platform_super_admin.sql`, `supabase/operations/create_restaurant_rpc.sql` y `supabase/operations/platform_admin_delete_restaurants.sql`. Confirma éxito en cada caso. No vuelvas a ejecutar la migración inicial si ya se aplicó; para un proyecto existente, aplica solo los scripts que falten. La ejecución manual no se registra en el historial local de Supabase CLI.
 3. En **Project Settings → Data API**, confirma que `public` esté entre los esquemas expuestos. Las versiones recientes no exponen automáticamente todas las tablas nuevas. Los grants explícitos y RLS son requisitos separados.
 4. En **Authentication → Settings**, desactiva los registros públicos. En **Authentication → Providers**, habilita solo los métodos necesarios (para la primera versión, correo/contraseña); crea o invita usuarios desde **Authentication → Users**. No concedas roles según datos enviados por el navegador.
-5. Crea primero el usuario en Authentication y copia su UUID desde la lista de usuarios. Para una cuenta super admin, usa el bloque global de abajo. Para un owner de restaurante, ejecuta el bloque de bootstrap de membresía. Ambos bloques deben ejecutarse en SQL Editor, nunca desde el frontend.
+5. Crea primero el usuario en Authentication y copia su UUID desde la lista de usuarios. Para una cuenta super admin, usa el bloque global de abajo. Para asignar el primer restaurante, ejecuta el bootstrap de owner. Después, un super admin podrá dar de alta restaurantes desde el panel.
 6. Mantén `is_active = false` durante la preparación. Tras comprobar datos y catálogo, el super admin puede activar el negocio; si aún no está conectado el panel, hazlo manualmente en SQL Editor.
-7. Para registrar otro negocio, repite el bloque con un slug nuevo y usuario ya creado/invitado. Los clientes API no pueden insertar, cambiar ni borrar las filas de super admins o miembros.
+7. Para registrar otro negocio, usa **Nuevo restaurante** en el panel. La cuenta owner debe existir previamente en Authentication. Los clientes API no pueden cambiar ni borrar las filas de super admins o miembros.
 
 ### Asignar el super admin global
 
@@ -91,6 +101,12 @@ begin
 end;
 $$;
 ```
+
+### Automatizar altas desde el panel
+
+El super admin puede crear el restaurante y asignar su owner de forma atómica desde **/admin/**. La cuenta del owner debe crearse o invitarse antes en **Authentication → Users**; copia su UUID para completar el formulario. El catálogo queda inactivo hasta que se revise y publique.
+
+En un proyecto existente, ejecuta una sola vez `supabase/operations/create_restaurant_rpc.sql` en SQL Editor. El archivo `supabase/bootstrap.sql` ya incluye esa función para instalaciones nuevas. La función usa `SECURITY INVOKER` y políticas RLS que limitan las altas a superadmins; no requiere exponer una clave secreta en el navegador.
 
 ### Límites de seguridad y Storage
 

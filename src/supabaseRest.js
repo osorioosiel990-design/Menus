@@ -73,24 +73,30 @@
     return data;
   }
 
-  function persistSession(session) {
+  function persistSession(session, remember = session.remember === true) {
     const normalized = {
       access_token: session.access_token,
       refresh_token: session.refresh_token,
       expires_at: session.expires_at || Math.floor(Date.now() / 1000) + (session.expires_in || 3600),
       user: session.user || null,
+      remember,
     };
-    sessionStorage.setItem(storageKey, JSON.stringify(normalized));
+    const storage = remember ? localStorage : sessionStorage;
+    const otherStorage = remember ? sessionStorage : localStorage;
+    storage.setItem(storageKey, JSON.stringify(normalized));
+    otherStorage.removeItem(storageKey);
     return normalized;
   }
 
   function clearSession() {
     sessionStorage.removeItem(storageKey);
+    localStorage.removeItem(storageKey);
   }
 
   function readSession() {
     try {
-      return JSON.parse(sessionStorage.getItem(storageKey) || 'null');
+      const stored = localStorage.getItem(storageKey) || sessionStorage.getItem(storageKey);
+      return JSON.parse(stored || 'null');
     } catch {
       clearSession();
       return null;
@@ -193,6 +199,11 @@
     getConfigurationError,
     request,
     rest,
+    createRestaurant: (name, slug, ownerUserId, session) => request('/rest/v1/rpc/create_restaurant_for_owner', {
+      method: 'POST',
+      body: { p_name: name, p_slug: slug, p_owner_id: ownerUserId },
+      session,
+    }),
     publicStorageUrl,
     uploadObject,
     removeObjects,

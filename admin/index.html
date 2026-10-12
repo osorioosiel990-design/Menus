@@ -6,9 +6,11 @@
     <meta name="robots" content="noindex,nofollow,noarchive" />
     <meta name="googlebot" content="noindex,nofollow,noarchive" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <base href="../" />
-    <link rel="stylesheet" href="src/styles.css?v=local" />
     <title>Acceso privado | Menú Abierto</title>
+    <script>
+      window.CATALOG_BASE_PATH = new URL('../', window.location.href).pathname;
+      window.CATALOG_ASSET_VERSION = 'local';
+    </script>
   </head>
   <body>
     <div id="app" aria-live="polite">
@@ -17,12 +19,6 @@
         <p>Cargando acceso seguro</p>
       </main>
     </div>
-    <script defer src="src/data/demoRestaurants.js?v=local"></script>
-    <script defer src="src/router.js?v=local"></script>
-    <script defer src="src/config.js?v=local"></script>
-    <script defer src="src/seo.js?v=local"></script>
-    <script defer src="src/supabaseRest.js?v=local"></script>
-    <script defer src="src/admin.js?v=local"></script>
-    <script defer src="src/main.js?v=local"></script>
+    <script type="module" src="../src/ui/legacy-entry.jsx"></script>
   </body>
 </html>

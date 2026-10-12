@@ -45,12 +45,12 @@ function updateSeo({ title, description, path, image, robots, data }) {
 
 function renderLoading(slug) {
   setTitle('Cargando catálogo');
-  app.innerHTML = `
+  window.CatalogUI.renderMarkup(app, `
     <main class="loading-screen" aria-label="Cargando catálogo">
       <span class="loading-mark">${icon('utensils')}</span>
       <span>Abriendo el menú<span class="loading-dots">...</span></span>
       <span class="sr-only">${escapeHtml(slug)}</span>
-    </main>`;
+    </main>`);
 }
 
 function renderUnavailable(title, description, code = 'CATÁLOGO') {
@@ -60,14 +60,14 @@ function renderUnavailable(title, description, code = 'CATÁLOGO') {
     path: window.location.pathname,
     robots: 'noindex,follow',
   });
-  app.innerHTML = `
+  window.CatalogUI.renderMarkup(app, `
     <main class="message-screen">
       <div class="message-mark">${icon('utensils')}</div>
       <p class="eyebrow">${escapeHtml(code)}</p>
       <h1>${escapeHtml(title)}</h1>
       <p class="message-copy">${escapeHtml(description)}</p>
       <a class="text-link" href="${pagePath('/')}">Explorar restaurantes ${icon('arrow-up-right')}</a>
-    </main>`;
+    </main>`);
 }
 
 function demoDirectoryEntries() {
@@ -165,7 +165,7 @@ function renderDirectory({ entries, isDemo, error }) {
       ? '<p class="directory-status" role="status">Todavía no hay restaurantes con catálogo público activo.</p>'
       : `<p class="directory-status" role="status"><strong id="directory-count">${entries.length}</strong> ${entries.length === 1 ? 'restaurante disponible' : 'restaurantes disponibles'}</p>`;
 
-  app.innerHTML = `
+  window.CatalogUI.renderMarkup(app, `
     <div class="directory-shell">
       <header class="directory-topbar">
         <a class="directory-brand" href="${pagePath('/')}" aria-label="${escapeHtml(window.CATALOG_CONFIG.brandName)}, inicio"><span class="brand-symbol">M</span><span>${escapeHtml(window.CATALOG_CONFIG.brandName)}</span></a>
@@ -189,7 +189,7 @@ function renderDirectory({ entries, isDemo, error }) {
         </section>
       </main>
       <footer class="directory-footer"><span class="footer-mark">${escapeHtml(window.CATALOG_CONFIG.brandName.toLocaleUpperCase('es'))}</span><span>Catálogos digitales para descubrir y compartir</span></footer>
-    </div>`;
+    </div>`);
 
   const search = app.querySelector('#directory-search');
   const cards = [...app.querySelectorAll('.directory-row')];
@@ -236,7 +236,7 @@ async function renderDirectoryRoute() {
     path: pagePath('/'),
     data: directoryStructuredData([], new URL(pagePath('/'), window.location.origin).href),
   });
-  app.innerHTML = `<main class="directory-loading"><span class="admin-spinner"></span><p>Buscando restaurantes disponibles…</p></main>`;
+  window.CatalogUI.renderMarkup(app, `<main class="directory-loading"><span class="admin-spinner"></span><p>Buscando restaurantes disponibles…</p></main>`);
   const result = await loadDirectoryEntries();
   renderDirectory(result);
 }
@@ -248,12 +248,12 @@ function renderBusinessRoute() {
   const priceFormatter = new Intl.NumberFormat('es-ES', { useGrouping: 'always' });
   const plans = configuration.businessPlans.map((plan) => {
     const regularPrice = configuration.businessMonthlyPrice * plan.months;
-    const totalPrice = Math.round(regularPrice * (1 - plan.discountPercent / 100));
+    const savings = regularPrice - plan.totalPrice;
     return {
       ...plan,
-      totalPrice,
-      savings: regularPrice - totalPrice,
-      monthlyEquivalent: Math.round(totalPrice / plan.months),
+      savings,
+      discountPercent: Math.round((savings / regularPrice) * 100),
+      monthlyEquivalent: Math.round(plan.totalPrice / plan.months),
     };
   });
   const description = 'Publica el menú de tu negocio en un catálogo digital fácil de consultar, actualizar y compartir.';
@@ -281,7 +281,7 @@ function renderBusinessRoute() {
     },
   });
 
-  app.innerHTML = `
+  window.CatalogUI.renderMarkup(app, `
     <div class="business-shell">
       <header class="directory-topbar">
         <a class="directory-brand" href="${pagePath('/')}" aria-label="${escapeHtml(brandName)}, inicio"><span class="brand-symbol">M</span><span>${escapeHtml(brandName)}</span></a>
@@ -306,11 +306,15 @@ function renderBusinessRoute() {
           <div class="business-section-heading"><p class="eyebrow">PLAN BÁSICO</p><h2 id="business-pricing-title">Todo lo necesario para publicar tu menú.</h2><p>Catálogo de productos, categorías, imágenes, precios y disponibilidad en un enlace para compartir.</p></div>
           <p class="business-plan-note">Incluye soporte durante las 24 horas. El pago trimestral ofrece el mejor equilibrio para comenzar.</p>
           <div class="business-plan-grid">${plans.map((plan) => `<article class="business-plan${plan.months === 3 ? ' is-recommended' : ''}">${plan.months === 3 ? '<p class="business-plan-badge">RECOMENDADO</p>' : ''}<h3>${plan.label}</h3><p class="business-plan-total"><strong>${priceFormatter.format(plan.totalPrice)}</strong><span>${currency} · ${plan.months === 1 ? 'cada mes' : `cada ${plan.months} meses`}</span></p><p class="business-plan-monthly">Equivale a ${priceFormatter.format(plan.monthlyEquivalent)} ${currency}/mes</p>${plan.discountPercent ? `<p class="business-plan-savings">Ahorras ${priceFormatter.format(plan.savings)} ${currency} (${plan.discountPercent}%)</p>` : '<p class="business-plan-savings">Sin permanencia anual</p>'}</article>`).join('')}</div>
+          <div class="business-payment">
+            <img src="${pagePath('/transfermovil.svg')}" alt="Ilustración de pago por Transfermóvil" width="160" height="112" />
+            <div><p class="eyebrow">FORMA DE PAGO</p><h3>Pago por Transfermóvil</h3><p>El pago del plan se realiza mediante transferencia por Transfermóvil.</p></div>
+          </div>
           <a class="business-whatsapp business-whatsapp-dark" href="${contactUrl}" target="_blank" rel="noopener noreferrer">Hablar sobre mi negocio ${icon('arrow-up-right')}</a>
         </section>
       </main>
       <footer class="directory-footer"><span class="footer-mark">${escapeHtml(brandName.toLocaleUpperCase('es'))}</span><a href="${pagePath('/')}">Volver al inicio</a></footer>
-    </div>`;
+    </div>`);
 }
 
 function publicStorageUrl(path) {
@@ -319,7 +323,28 @@ function publicStorageUrl(path) {
 
 function openingHoursLabel(openingHours) {
   if (typeof openingHours === 'string' && openingHours.trim()) return openingHours;
-  if (openingHours && typeof openingHours === 'object' && Object.keys(openingHours).length) return 'Consulta el horario del día';
+  if (openingHours && typeof openingHours === 'object' && Object.keys(openingHours).length) {
+    const days = [
+      ['monday', 'lunes', 'Lun'],
+      ['tuesday', 'martes', 'Mar'],
+      ['wednesday', 'miercoles', 'Mié'],
+      ['thursday', 'jueves', 'Jue'],
+      ['friday', 'viernes', 'Vie'],
+      ['saturday', 'sabado', 'Sáb'],
+      ['sunday', 'domingo', 'Dom'],
+    ];
+    const schedule = days.flatMap(([key, alias, label]) => {
+      const entry = openingHours[key] ?? openingHours[alias];
+      if (!entry) return [];
+      if (typeof entry === 'object' && !Array.isArray(entry) && entry.closed === true) return [`${label}: cerrado`];
+      if (typeof entry !== 'string' && (!entry || typeof entry !== 'object' || Array.isArray(entry))) return [];
+      const open = typeof entry === 'string' ? (entry.match(/([01]\d|2[0-3]):([0-5]\d)/g) || [])[0] : entry.open || entry.opens || entry.from;
+      const close = typeof entry === 'string' ? (entry.match(/([01]\d|2[0-3]):([0-5]\d)/g) || [])[1] : entry.close || entry.closes || entry.to;
+      return open && close ? [`${label} ${open}–${close}`] : [];
+    });
+    if (schedule.length) return schedule.join(' · ');
+    return 'Consulta el horario del día';
+  }
   return 'Horario no especificado';
 }
 
@@ -407,11 +432,13 @@ function renderCatalog(restaurant) {
   document.documentElement.style.setProperty('--ink', theme.ink);
   document.documentElement.style.setProperty('--paper', theme.paper);
 
-  app.innerHTML = `
+  window.CatalogUI.renderMarkup(app, `
     <div class="catalog-shell">
       <header class="topbar">
         <a class="wordmark" href="${pagePath(`/r/${encodeURIComponent(restaurant.slug)}/`)}" aria-label="${escapeHtml(name)}, inicio">
-          <span class="wordmark-icon">${icon('utensils')}</span>
+          ${restaurant.logo_url
+            ? `<img class="wordmark-logo" src="${escapeHtml(restaurant.logo_url)}" alt="Logotipo de ${escapeHtml(name)}" />`
+            : `<span class="wordmark-icon">${icon('utensils')}</span>`}
           <span>${escapeHtml(name)}</span>
         </a>
         ${siteNavigation('catalog')}
@@ -467,7 +494,7 @@ function renderCatalog(restaurant) {
         <span class="footer-mark">${icon('utensils')} ${escapeHtml(window.CATALOG_CONFIG.brandName.toLocaleUpperCase('es'))}</span>
         <span>${restaurant.isDemo ? 'Contenido de demostración para desarrollo' : 'Catálogo digital público'}</span>
       </footer>
-    </div>`;
+    </div>`);
 
   attachCatalogInteractions(products);
 }
@@ -494,6 +521,14 @@ function renderProduct(product, currency, index) {
 function attachCatalogInteractions(products) {
   let activeCategory = 'all';
   let searchTerm = '';
+  const logo = document.querySelector('.wordmark-logo');
+  logo?.addEventListener('error', () => {
+    const fallback = document.createElement('span');
+    fallback.className = 'wordmark-icon';
+    fallback.setAttribute('aria-hidden', 'true');
+    fallback.innerHTML = icon('utensils');
+    logo.replaceWith(fallback);
+  }, { once: true });
   const cards = [...document.querySelectorAll('.product-card')];
   const count = document.querySelector('#visible-count');
   const emptyState = document.querySelector('#empty-state');

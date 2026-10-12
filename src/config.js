@@ -1,11 +1,11 @@
 window.CATALOG_CONFIG = {
   brandName: 'Menú Abierto',
-  businessMonthlyPrice: 1500,
+  businessMonthlyPrice: 2000,
   businessPlans: [
-    { months: 1, label: 'Mensual', discountPercent: 0 },
-    { months: 3, label: 'Trimestral', discountPercent: 13 },
-    { months: 6, label: 'Semestral', discountPercent: 15 },
-    { months: 12, label: 'Anual', discountPercent: 20 },
+    { months: 1, label: 'Mensual', totalPrice: 2000 },
+    { months: 3, label: 'Trimestral', totalPrice: 5500 },
+    { months: 6, label: 'Semestral', totalPrice: 10000 },
+    { months: 12, label: 'Anual', totalPrice: 18000 },
   ],
   businessCurrency: 'CUP',
   businessWhatsApp: '5351196751',
