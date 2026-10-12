@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f2eb" />
-    <meta name="description" content="Encuentra restaurantes independientes y consulta sus catálogos digitales en Mesa Abierta." />
+    <meta name="description" content="Encuentra restaurantes y consulta sus menús digitales en Menú Abierto." />
     <meta name="robots" content="index,follow,max-image-preview:large" />
-    <meta property="og:site_name" content="Mesa Abierta" />
+    <meta property="og:site_name" content="Menú Abierto" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Mesa Abierta | Catálogos digitales de restaurantes" />
+    <meta property="og:title" content="Menú Abierto | Catálogos digitales de restaurantes" />
     <meta property="og:description" content="Explora restaurantes y encuentra qué disfrutar cerca de ti." />
     <meta name="twitter:card" content="summary" />
-    <!-- DIRECTORY_JSON_LD -->
+    <script id="page-structured-data" type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Menú Abierto","url":"https://osorioosiel990-design.github.io/Menus/","inLanguage":"es"},{"@type":"Organization","name":"Menú Abierto","url":"https://osorioosiel990-design.github.io/Menus/"}]}</script>
     <script>
       (function () {
         var parameters = new URLSearchParams(window.location.search);
@@ -19,7 +19,7 @@
         var segments = window.location.pathname.split('/').filter(Boolean);
         var routeIndex = -1;
         segments.forEach(function (segment, index) {
-          if ((segment === 'r' && segments.length - index === 2) || (segment === 'admin' && segments.length - index === 1)) routeIndex = index;
+          if ((segment === 'r' && segments.length - index === 2) || (['admin', 'negocios'].includes(segment) && segments.length - index === 1)) routeIndex = index;
         });
         var basePath = encodedRoute
           ? window.location.pathname.replace(/\/?$/, '/')
@@ -30,7 +30,7 @@
         baseElement.href = basePath;
         document.head.appendChild(baseElement);
         window.CATALOG_BASE_PATH = basePath;
-        window.CATALOG_ASSET_VERSION = '__ASSET_VERSION__';
+        window.CATALOG_ASSET_VERSION = 'local';
         var stylesheet = document.createElement('link');
         stylesheet.rel = 'stylesheet';
         stylesheet.href = basePath + 'src/styles.css?v=' + window.CATALOG_ASSET_VERSION;
@@ -49,12 +49,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
-    <title>Mesa Abierta | Catálogos digitales de restaurantes</title>
+    <title>Menú Abierto | Catálogos digitales de restaurantes</title>
   </head>
   <body>
     <div id="app" aria-live="polite">
       <main class="directory-shell">
-        <header class="directory-topbar"><a class="directory-brand" href="./"><span class="brand-symbol">M</span><span>Mesa Abierta</span></a><span class="directory-top-note">RESTAURANTES INDEPENDIENTES</span></header>
+        <header class="directory-topbar"><a class="directory-brand" href="./"><span class="brand-symbol">M</span><span>Menú Abierto</span></a><nav class="site-nav" aria-label="Navegación principal"><a href="./" aria-current="page">Inicio</a><a href="negocios/">Para negocios</a><a href="admin/">Administración</a></nav></header>
         <section class="directory-hero"><p class="eyebrow">UN BUEN LUGAR PARA EMPEZAR</p><h1>Encuentra tu próxima mesa<span>.</span></h1><p>Explora restaurantes, descubre sus propuestas y abre sus catálogos digitales.</p></section>
         <section class="directory-list" aria-label="Restaurantes disponibles">
           <!-- DIRECTORY_CARDS_START -->

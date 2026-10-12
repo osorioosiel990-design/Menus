@@ -1,6 +1,6 @@
-# Mesa Abierta | Catálogos digitales multirrestaurante
+# Menú Abierto | Catálogos digitales multirrestaurante
 
-**Mesa Abierta** es el nombre de trabajo de la plataforma. No es un nombre legal ni se ha comprobado su disponibilidad de marca/dominio. El frontend usa HTML, CSS y JavaScript nativos; no requiere `npm install`, paquetes ni compilación. Los restaurantes, platos, precios, horarios e imágenes de ejemplo están marcados como demostración y no representan negocios reales.
+**Menú Abierto** es el nombre de trabajo de la plataforma. No es un nombre legal ni se ha comprobado su disponibilidad de marca/dominio. El frontend usa HTML, CSS y JavaScript nativos; no requiere `npm install`, paquetes ni compilación. Los restaurantes, platos, precios, horarios e imágenes de ejemplo están marcados como demostración y no representan negocios reales.
 
 ## Probar en local
 
@@ -10,11 +10,11 @@ Se requiere una instalación existente de Node.js únicamente para el servidor l
 node server.js
 ```
 
-Abre `http://127.0.0.1:4173/` para el directorio, `/r/mesa-limon/` o `/r/patio-bruma/` para los catálogos y `/admin/` para administración. `server.js` usa solo módulos incluidos en Node; sirve el `index.html` de carpetas existentes y usa el SPA fallback para el resto.
+Abre `http://127.0.0.1:4173/` para el directorio, `/negocios/` para conocer el servicio, `/r/mesa-limon/` o `/r/patio-bruma/` para los catálogos y `/admin/` para administración. `server.js` usa solo módulos incluidos en Node; sirve el `index.html` de carpetas existentes y usa el SPA fallback para el resto.
 
 ## Rutas y hosting estático
 
-La aplicación reconoce `/r/{slug}/` y `/admin/` leyendo `window.location.pathname`. Para que una ruta funcione al abrirla o recargarla directamente, el hosting debe devolver `index.html` para rutas sin archivo correspondiente. `_redirects` en la raíz incluye el fallback de Netlify; en otros hosts configura la regla equivalente según su documentación. El sitio no depende de esa configuración para su lógica de catálogo.
+La aplicación reconoce `/`, `/negocios/`, `/admin/` y `/r/{slug}/` leyendo `window.location.pathname`. La página comercial se prerenderiza durante la publicación. Para que una ruta de la app funcione al abrirla o recargarla directamente, el hosting debe devolver `index.html` para rutas sin archivo correspondiente. `_redirects` en la raíz incluye el fallback de Netlify; GitHub Pages usa `404.html` para conservar rutas profundas. En otros hosts configura la regla equivalente según su documentación.
 
 ### GitHub Pages
 
@@ -26,18 +26,23 @@ La portada lista restaurantes con catálogo activo consultados con clave públic
 
 El repositorio público es `osorioosiel990-design/Menus`. `.github/workflows/pages.yml` publica al hacer push a `main` y reconstruye el sitemap cada día. GitHub Pages está configurado con **GitHub Actions**. El flujo usa solo Node incluido en el runner, sin instalar paquetes.
 
-El `404.html` conserva rutas profundas; para los restaurantes activos, el workflow también genera `r/{slug}/index.html` con contenido SEO estático, así que las páginas publicadas de esos restaurantes reciben una respuesta normal antes de hidratar el catálogo dinámico.
+### Cloudflare Pages
+
+Para publicar la misma web en Cloudflare, conecta el repositorio desde **Workers & Pages → Create application → Pages → Connect to Git** y elige la rama `main`. Usa preset **None**, raíz `/`, comando de compilación `node scripts/generate-sitemap.js` y carpeta de salida `.`. No hace falta instalar paquetes. El comando genera el HTML SEO de `/negocios/`, las páginas de restaurantes y el sitemap antes de cada publicación. `_redirects` mantiene el fallback de las rutas de la app.
+
+El `404.html` conserva rutas profundas; el workflow genera `negocios/index.html` y, para los restaurantes activos, `r/{slug}/index.html` con contenido SEO estático. El sitemap incluye la página para negocios y los catálogos publicados.
 
 ### SEO y Google
 
-- Portada y restaurantes tienen títulos, descripciones, URL canonical, Open Graph/Twitter, encabezados semánticos e información estructurada JSON-LD. El directorio muestra enlaces HTML rastreables a cada catálogo activo.
+- Portada, página comercial y restaurantes tienen títulos, descripciones, URL canonical, Open Graph/Twitter e información estructurada JSON-LD.
+- La página `/negocios/` publica el Plan Básico: 1.500 CUP mensual; 3.915 CUP por trimestre (13% de descuento); 7.650 CUP por seis meses (15%); y 14.400 CUP por año (20%). Enlaza a WhatsApp, pero no procesa pagos.
+- El panel de administración genera un QR vectorial SVG del catálogo público para descargar o imprimir. La librería QR se carga de forma diferida desde jsDelivr con versión e integridad fijadas.
 - CSS y JavaScript se solicitan con una versión basada en el commit de despliegue para reducir la posibilidad de que Google procese un bundle antiguo y obtenga metadatos inconsistentes.
-- `/admin/` se sirve desde `admin/index.html` con `noindex,nofollow,noarchive`; el panel privado no debe aparecer en Google.
-- En cada despliegue el workflow consulta solo slugs activos con la clave pública, genera páginas prerenderizadas y `sitemap.xml`. Una tarea diaria vuelve a generar sitemap/páginas para incorporar cambios, con demora potencial de hasta un día. Sin esquema disponible, el sitemap incluye solamente la portada.
-- La base de GitHub Pages para este proyecto es `https://osorioosiel990-design.github.io/Menus/`. En GitHub Pages de proyecto, `robots.txt` se sirve bajo `/Menus/robots.txt`, no bajo la raíz del host como requiere el estándar de robots; por eso no se promete su descubrimiento automático. Registra manualmente `https://osorioosiel990-design.github.io/Menus/sitemap.xml` en [Google Search Console](https://search.google.com/search-console) y usa inspección de URL para solicitar rastreo. Para control SEO completo del host raíz, haría falta dominio propio o publicar en un sitio de usuario.
-- SEO no garantiza una posición concreta ni indexación inmediata. Google suele tardar días en volver a rastrear. El Rich Results Test ayuda a validar Restaurant JSON-LD; Search Console verifica el resultado en el índice.
+- `/admin/` se sirve con `noindex,nofollow,noarchive`; el panel privado no debe aparecer en Google.
+- El workflow genera la página comercial, páginas de restaurantes activos y `sitemap.xml`; la tarea diaria vuelve a consultar los slugs publicados.
+- SEO no garantiza una posición concreta ni indexación inmediata. Google puede tardar días en volver a rastrear.
 
-El nombre **Mesa Abierta** es una propuesta de marca para la plataforma, no para cada restaurante. Los restaurantes conservan sus propios nombres y slugs.
+El nombre **Menú Abierto** es una propuesta de marca para la plataforma, no para cada restaurante. Su disponibilidad legal y de dominio no está verificada. Los restaurantes conservan sus propios nombres y slugs.
 
 Slugs demo disponibles: `mesa-limon`, `patio-bruma` y `demo-inactivo`. Los otros slugs muestran un estado de catálogo inexistente. El buscador y los filtros se ejecutan en el navegador sobre los datos demo actuales.
 
@@ -67,7 +72,7 @@ values ('REEMPLAZAR-CON-UUID-DE-auth.users'::uuid)
 on conflict (user_id) do nothing;
 ```
 
-Para retirar acceso global, ejecuta en SQL Editor `delete from public.platform_admins where user_id = 'UUID-DE-LA-CUENTA'::uuid;`. El navegador no tiene permisos de escritura en esta tabla y el panel no toma el rol de `user_metadata`. El super admin puede ver/editar la ficha de todos los restaurantes, incluidos inactivos, y las políticas le permiten operar contenido/Storage desde las funciones que se implementarán después. La asignación o revocación de miembros/roles de restaurante sigue siendo una operación privilegiada manual; no puede autoasignarse ni crear más super admins desde la app.
+Para retirar acceso global, ejecuta en SQL Editor `delete from public.platform_admins where user_id = 'UUID-DE-LA-CUENTA'::uuid;`. El navegador no tiene permisos de escritura en esta tabla y el panel no toma el rol de `user_metadata`. El super admin puede ver y editar fichas, catálogos e imágenes de restaurantes conforme a las políticas RLS. La asignación o revocación de miembros/roles de restaurante sigue siendo una operación privilegiada manual; no puede autoasignarse ni crear más super admins desde la app.
 
 Para este cambio usa la migración aditiva `20261011000200_platform_super_admin.sql`; no vuelvas a ejecutar la migración base si ya se aplicó. Tras ejecutar la migración aditiva, confirma que `public` siga expuesto a Data API; la migración concede `SELECT` sobre `platform_admins` solo al rol `authenticated` y RLS limita la lectura a la propia cuenta.
 
@@ -92,9 +97,9 @@ $$;
 - Visitantes anónimos solo pueden leer restaurantes activos, categorías activas y productos de esas categorías. Un producto no disponible sigue siendo visible para mostrar su estado.
 - `owner` y `admin` pueden editar la ficha del negocio; `owner`, `admin` y `editor` pueden editar contenido. La autorización se verifica en RLS, no solo en la interfaz.
 - Las políticas de membresía no admiten escrituras por el cliente. Dar o cambiar roles requiere una operación privilegiada manual. Hay como máximo un owner por restaurante.
-- El bucket `restaurant-catalog` es público para servir imágenes del catálogo. Por ello, cualquiera que tenga una URL de imagen puede leerla; subida, reemplazo y borrado requieren autenticación y membresía del restaurante. No guardes archivos privados allí.
-- Cada objeto debe vivir bajo `<restaurant-uuid>/logo/...`, `<restaurant-uuid>/cover/...` o `<restaurant-uuid>/products/...`. `products.image_path` usa el formato `<restaurant-uuid>/products/<nombre-unico>.webp`. Storage limita a 5 MiB y a JPEG, PNG o WebP.
-- La política limita cambios de objetos por carpeta y membresía. La migración no se ha ejecutado contra un proyecto real en este workspace, así que estos permisos requieren validación contra dos cuentas y dos restaurantes antes de producción.
+- El bucket `restaurant-catalog` es público para servir imágenes del catálogo; subida, reemplazo y borrado requieren autenticación y membresía del restaurante. No guardes archivos privados allí.
+- Los objetos deben vivir bajo `<restaurant-uuid>/logo/...`, `<restaurant-uuid>/cover/...` o `<restaurant-uuid>/products/...`. Storage limita las imágenes a 5 MiB y JPEG, PNG o WebP.
+- Las políticas aún requieren validación contra dos cuentas y dos restaurantes antes de producción. El arnés local usa Supabase simulado y no certifica RLS.
 
 ### Claves
 
@@ -102,7 +107,7 @@ La web solo podrá usar la URL del proyecto y la clave pública `sb_publishable_
 
 ## Estado de Supabase
 
-La ruta `/admin/` incluye login, cierre de sesión, recuperación, selección de restaurante y edición de ficha/colores. `src/config.js` tiene URL y clave publicable. La última lectura anónima a `restaurants` falló porque la tabla no existía/estaba expuesta; por eso no se han validado todavía la lista real, el login o cambios contra Supabase. Tras aplicar migración y revisar **Data API → Exposed schemas**, el directorio y las páginas generadas consultarán restaurantes activos por RLS. CRUD de productos/categorías e imágenes sigue pendiente.
+La ruta `/admin/` incluye login, cierre de sesión, recuperación, selección de restaurante y edición de ficha, diseño y catálogo. `src/config.js` tiene URL y clave publicable. La última lectura anónima a `restaurants` falló porque la tabla no existía/estaba expuesta; por eso no se han validado todavía el login ni los permisos contra Supabase real. El CRUD de productos/categorías y las cargas, reemplazos y borrados de imágenes pasan el arnés local simulado. Tras aplicar las migraciones y revisar **Data API → Exposed schemas**, falta validar lectura pública, roles y aislamiento de restaurantes con cuentas reales.
 
 ### Configurar acceso para la fase 4
 
@@ -121,4 +126,4 @@ window.CATALOG_CONFIG = {
 4. Inicia `node server.js`, abre `/admin/` e inicia sesión con una cuenta ya autorizada. El token de sesión se conserva en `sessionStorage` de esa pestaña, se renueva antes de expirar y se elimina al cerrar sesión.
 5. Guarda datos y revisa la confirmación. El panel exige una respuesta `PATCH` con una fila devuelta por RLS; la interfaz no informa éxito si Supabase no confirmó el cambio.
 
-La autenticación usa los endpoints REST/Auth de Supabase mediante `fetch`; no descarga SDK ni requiere instalación. Sin un proyecto configurado no se pueden probar credenciales reales, correo de recuperación ni autorización remota. La edición de productos/categorías y la carga de imágenes quedan pendientes para la fase 5; el catálogo público aún usa datos demo.
+La autenticación usa los endpoints REST/Auth de Supabase mediante `fetch`; no descarga SDK ni requiere instalación. Sin una cuenta autorizada no se pueden probar credenciales reales, correo de recuperación ni autorización remota. La fase 5 implementa CRUD de productos/categorías y manejo de imágenes; las pruebas locales usan un mock. El catálogo público consulta Supabase y muestra datos demo si la configuración o la tabla no están disponibles.

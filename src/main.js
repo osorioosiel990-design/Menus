@@ -30,6 +30,15 @@ function pagePath(path) {
   return window.CatalogRouter.path(path);
 }
 
+function siteNavigation(activePage) {
+  const links = [
+    ['home', '/', 'Inicio'],
+    ['business', '/negocios/', 'Para negocios'],
+    ['admin', '/admin/', 'Administración'],
+  ];
+  return `<nav class="site-nav" aria-label="Navegación principal">${links.map(([key, path, label]) => `<a href="${pagePath(path)}"${key === activePage ? ' aria-current="page"' : ''}>${label}</a>`).join('')}</nav>`;
+}
+
 function updateSeo({ title, description, path, image, robots, data }) {
   window.CatalogSeo.update({ title, description, path, image, robots, data });
 }
@@ -46,7 +55,7 @@ function renderLoading(slug) {
 
 function renderUnavailable(title, description, code = 'CATÁLOGO') {
   updateSeo({
-    title: `${title} | Mesa Abierta`,
+    title: `${title} | ${window.CATALOG_CONFIG.brandName}`,
     description,
     path: window.location.pathname,
     robots: 'noindex,follow',
@@ -109,11 +118,11 @@ function directoryStructuredData(entries, directoryUrl) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'WebSite', name: 'Mesa Abierta', url: directoryUrl, inLanguage: 'es' },
-      { '@type': 'Organization', name: 'Mesa Abierta', url: directoryUrl },
+      { '@type': 'WebSite', name: window.CATALOG_CONFIG.brandName, url: directoryUrl, inLanguage: 'es' },
+      { '@type': 'Organization', name: window.CATALOG_CONFIG.brandName, url: directoryUrl },
       ...(businesses.length ? [{
         '@type': 'ItemList',
-        name: 'Restaurantes disponibles en Mesa Abierta',
+        name: `Restaurantes disponibles en ${window.CATALOG_CONFIG.brandName}`,
         itemListElement: businesses.map((entry, index) => ({
           '@type': 'ListItem',
           position: index + 1,
@@ -144,8 +153,8 @@ function renderDirectoryCard(entry) {
 function renderDirectory({ entries, isDemo, error }) {
   const directoryUrl = new URL(pagePath('/'), window.location.origin).href;
   updateSeo({
-    title: 'Mesa Abierta | Restaurantes y catálogos digitales',
-    description: 'Encuentra restaurantes disponibles, descubre sus propuestas y consulta cada catálogo digital en Mesa Abierta.',
+    title: `${window.CATALOG_CONFIG.brandName} | Restaurantes y catálogos digitales`,
+    description: `Encuentra restaurantes disponibles, descubre sus propuestas y consulta cada catálogo digital en ${window.CATALOG_CONFIG.brandName}.`,
     path: pagePath('/'),
     data: directoryStructuredData(entries, directoryUrl),
   });
@@ -159,8 +168,8 @@ function renderDirectory({ entries, isDemo, error }) {
   app.innerHTML = `
     <div class="directory-shell">
       <header class="directory-topbar">
-        <a class="directory-brand" href="${pagePath('/')}" aria-label="Mesa Abierta, inicio"><span class="brand-symbol">M</span><span>Mesa Abierta</span></a>
-        <span class="directory-top-note">RESTAURANTES INDEPENDIENTES</span>
+        <a class="directory-brand" href="${pagePath('/')}" aria-label="${escapeHtml(window.CATALOG_CONFIG.brandName)}, inicio"><span class="brand-symbol">M</span><span>${escapeHtml(window.CATALOG_CONFIG.brandName)}</span></a>
+        ${siteNavigation('home')}
       </header>
       <main>
         <section class="directory-hero" aria-labelledby="directory-title">
@@ -174,8 +183,12 @@ function renderDirectory({ entries, isDemo, error }) {
           <div id="directory-list" class="directory-list" aria-live="polite">${entries.map(renderDirectoryCard).join('')}</div>
           <div id="directory-empty" class="directory-empty" hidden><h3>No encontramos restaurantes</h3><p>Prueba otra búsqueda.</p></div>
         </section>
+        <section class="directory-business-cta" aria-labelledby="business-cta-title">
+          <div><p class="eyebrow">¿TIENES UN NEGOCIO?</p><h2 id="business-cta-title">Pon tu menú en línea.</h2><p>Un catálogo claro, fácil de actualizar y listo para compartir con tus clientes.</p></div>
+          <a class="business-text-link" href="${pagePath('/negocios/')}">Conoce el servicio ${icon('arrow-up-right')}</a>
+        </section>
       </main>
-      <footer class="directory-footer"><span class="footer-mark">MESA ABIERTA</span><span>Catálogos digitales para descubrir y compartir</span></footer>
+      <footer class="directory-footer"><span class="footer-mark">${escapeHtml(window.CATALOG_CONFIG.brandName.toLocaleUpperCase('es'))}</span><span>Catálogos digitales para descubrir y compartir</span></footer>
     </div>`;
 
   const search = app.querySelector('#directory-search');
@@ -216,10 +229,10 @@ function renderDirectory({ entries, isDemo, error }) {
 }
 
 async function renderDirectoryRoute() {
-  setTitle('Mesa Abierta | Restaurantes y catálogos digitales');
+  setTitle(`${window.CATALOG_CONFIG.brandName} | Restaurantes y catálogos digitales`);
   updateSeo({
-    title: 'Mesa Abierta | Restaurantes y catálogos digitales',
-    description: 'Encuentra restaurantes disponibles, descubre sus propuestas y consulta cada catálogo digital en Mesa Abierta.',
+    title: `${window.CATALOG_CONFIG.brandName} | Restaurantes y catálogos digitales`,
+    description: `Encuentra restaurantes disponibles, descubre sus propuestas y consulta cada catálogo digital en ${window.CATALOG_CONFIG.brandName}.`,
     path: pagePath('/'),
     data: directoryStructuredData([], new URL(pagePath('/'), window.location.origin).href),
   });
@@ -228,11 +241,80 @@ async function renderDirectoryRoute() {
   renderDirectory(result);
 }
 
+function renderBusinessRoute() {
+  const configuration = window.CATALOG_CONFIG;
+  const brandName = configuration.brandName;
+  const currency = configuration.businessCurrency;
+  const priceFormatter = new Intl.NumberFormat('es-ES', { useGrouping: 'always' });
+  const plans = configuration.businessPlans.map((plan) => {
+    const regularPrice = configuration.businessMonthlyPrice * plan.months;
+    const totalPrice = Math.round(regularPrice * (1 - plan.discountPercent / 100));
+    return {
+      ...plan,
+      totalPrice,
+      savings: regularPrice - totalPrice,
+      monthlyEquivalent: Math.round(totalPrice / plan.months),
+    };
+  });
+  const description = 'Publica el menú de tu negocio en un catálogo digital fácil de consultar, actualizar y compartir.';
+  const routePath = pagePath('/negocios/');
+  const message = `Hola, quiero información sobre el servicio de menús digitales de ${brandName}.`;
+  const contactUrl = `https://wa.me/${encodeURIComponent(configuration.businessWhatsApp)}?text=${encodeURIComponent(message)}`;
+
+  setTitle(`Menú digital para negocios | ${brandName}`);
+  updateSeo({
+    title: `Menú digital para negocios | ${brandName}`,
+    description,
+    path: routePath,
+    data: {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: `Menús digitales para negocios | ${brandName}`,
+      description,
+      provider: { '@type': 'Organization', name: brandName },
+      offers: plans.map((plan) => ({
+        '@type': 'Offer',
+        price: String(plan.totalPrice),
+        priceCurrency: currency,
+        description: `Plan ${plan.label} por ${plan.months} ${plan.months === 1 ? 'mes' : 'meses'}`,
+      })),
+    },
+  });
+
+  app.innerHTML = `
+    <div class="business-shell">
+      <header class="directory-topbar">
+        <a class="directory-brand" href="${pagePath('/')}" aria-label="${escapeHtml(brandName)}, inicio"><span class="brand-symbol">M</span><span>${escapeHtml(brandName)}</span></a>
+        ${siteNavigation('business')}
+      </header>
+      <main>
+        <section class="business-hero" aria-labelledby="business-title">
+          <p class="eyebrow">SERVICIO PARA NEGOCIOS</p>
+          <h1 id="business-title">Tu menú digital, listo para compartir<span>.</span></h1>
+          <p>${description} Tus clientes lo abren desde un enlace, sin descargar una aplicación.</p>
+          <a class="business-whatsapp" href="${contactUrl}" target="_blank" rel="noopener noreferrer">Contactar por WhatsApp ${icon('arrow-up-right')}</a>
+        </section>
+        <section class="business-includes" aria-labelledby="business-includes-title">
+          <div class="business-section-heading"><p class="eyebrow">LO ESENCIAL, EN UN SOLO ENLACE</p><h2 id="business-includes-title">Tu negocio, presentado con claridad.</h2></div>
+          <div class="business-feature-list">
+            <article><span>01</span><h3>Catálogo propio</h3><p>Productos y categorías organizados para que tus clientes encuentren lo que buscan.</p></article>
+            <article><span>02</span><h3>Actualizaciones sencillas</h3><p>Administra nombres, precios, disponibilidad e imágenes desde tu panel.</p></article>
+            <article><span>03</span><h3>Un enlace para compartir</h3><p>Tu catálogo público se puede abrir desde redes sociales, mensajes o un código QR.</p></article>
+          </div>
+        </section>
+        <section class="business-pricing" aria-labelledby="business-pricing-title">
+          <div class="business-section-heading"><p class="eyebrow">PLAN BÁSICO</p><h2 id="business-pricing-title">Todo lo necesario para publicar tu menú.</h2><p>Catálogo de productos, categorías, imágenes, precios y disponibilidad en un enlace para compartir.</p></div>
+          <p class="business-plan-note">Incluye soporte durante las 24 horas. El pago trimestral ofrece el mejor equilibrio para comenzar.</p>
+          <div class="business-plan-grid">${plans.map((plan) => `<article class="business-plan${plan.months === 3 ? ' is-recommended' : ''}">${plan.months === 3 ? '<p class="business-plan-badge">RECOMENDADO</p>' : ''}<h3>${plan.label}</h3><p class="business-plan-total"><strong>${priceFormatter.format(plan.totalPrice)}</strong><span>${currency} · ${plan.months === 1 ? 'cada mes' : `cada ${plan.months} meses`}</span></p><p class="business-plan-monthly">Equivale a ${priceFormatter.format(plan.monthlyEquivalent)} ${currency}/mes</p>${plan.discountPercent ? `<p class="business-plan-savings">Ahorras ${priceFormatter.format(plan.savings)} ${currency} (${plan.discountPercent}%)</p>` : '<p class="business-plan-savings">Sin permanencia anual</p>'}</article>`).join('')}</div>
+          <a class="business-whatsapp business-whatsapp-dark" href="${contactUrl}" target="_blank" rel="noopener noreferrer">Hablar sobre mi negocio ${icon('arrow-up-right')}</a>
+        </section>
+      </main>
+      <footer class="directory-footer"><span class="footer-mark">${escapeHtml(brandName.toLocaleUpperCase('es'))}</span><a href="${pagePath('/')}">Volver al inicio</a></footer>
+    </div>`;
+}
+
 function publicStorageUrl(path) {
-  if (!path) return '';
-  const base = window.CATALOG_CONFIG.supabaseUrl.replace(/\/+$/, '');
-  const encodedPath = String(path).split('/').map(encodeURIComponent).join('/');
-  return `${base}/storage/v1/object/public/restaurant-catalog/${encodedPath}`;
+  return window.CatalogSupabase.publicStorageUrl(path);
 }
 
 function openingHoursLabel(openingHours) {
@@ -307,9 +389,9 @@ function renderCatalog(restaurant) {
   const { name, label, description, location, hours, currency, theme, cover, categories, products } = restaurant;
   const canonicalPath = pagePath(`/r/${encodeURIComponent(restaurant.slug)}/`);
   const canonicalUrl = new URL(canonicalPath, window.location.origin).href;
-  const seoDescription = description || `Consulta el catálogo digital de ${name} en Mesa Abierta.`;
+  const seoDescription = description || `Consulta el catálogo digital de ${name} en ${window.CATALOG_CONFIG.brandName}.`;
   updateSeo({
-    title: `${name} | Menú y catálogo digital · Mesa Abierta`,
+    title: `${name} | Menú y catálogo digital · ${window.CATALOG_CONFIG.brandName}`,
     description: seoDescription,
     path: canonicalPath,
     image: cover || restaurant.logo_url || undefined,
@@ -332,6 +414,7 @@ function renderCatalog(restaurant) {
           <span class="wordmark-icon">${icon('utensils')}</span>
           <span>${escapeHtml(name)}</span>
         </a>
+        ${siteNavigation('catalog')}
         <span class="demo-flag${restaurant.isDemo ? '' : ' is-public'}"><span></span>${escapeHtml(restaurant.isDemo ? label : 'CATÁLOGO PÚBLICO')}</span>
       </header>
 
@@ -381,7 +464,7 @@ function renderCatalog(restaurant) {
       </main>
 
       <footer class="catalog-footer">
-        <span class="footer-mark">${icon('utensils')} MESA ABIERTA</span>
+        <span class="footer-mark">${icon('utensils')} ${escapeHtml(window.CATALOG_CONFIG.brandName.toLocaleUpperCase('es'))}</span>
         <span>${restaurant.isDemo ? 'Contenido de demostración para desarrollo' : 'Catálogo digital público'}</span>
       </footer>
     </div>`;
@@ -486,6 +569,10 @@ function render() {
   }
   if (route.name === 'admin') {
     window.CatalogAdmin.render(app);
+    return;
+  }
+  if (route.name === 'business') {
+    renderBusinessRoute();
     return;
   }
   if (route.name === 'not-found') {

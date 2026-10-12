@@ -10,7 +10,7 @@
         var segments = path.split('/').filter(Boolean);
         var routeIndex = -1;
         segments.forEach(function (segment, index) {
-          if ((segment === 'r' && segments.length - index === 2) || (segment === 'admin' && segments.length - index === 1)) routeIndex = index;
+          if ((segment === 'r' && segments.length - index === 2) || (['admin', 'negocios'].includes(segment) && segments.length - index === 1)) routeIndex = index;
         });
         if (routeIndex < 0) return;
         var basePath = routeIndex > 0 ? '/' + segments.slice(0, routeIndex).join('/') : '';

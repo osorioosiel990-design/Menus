@@ -51,8 +51,8 @@ async function activeSlugs() {
 
 function renderRestaurantPage(restaurant, canonicalUrl) {
   const name = escapeHtml(restaurant.name);
-  const description = escapeHtml(restaurant.description || `Consulta el catálogo digital de ${restaurant.name} en Mesa Abierta.`);
-  const title = `${restaurant.name} | Menú y catálogo digital · Mesa Abierta`;
+  const description = escapeHtml(restaurant.description || `Consulta el catálogo digital de ${restaurant.name} en ${config.brandName}.`);
+  const title = `${restaurant.name} | Menú y catálogo digital · ${config.brandName}`;
   const image = restaurant.cover_image_url || restaurant.logo_url || '';
   const structuredData = {
     '@context': 'https://schema.org',
@@ -85,7 +85,7 @@ function renderRestaurantPage(restaurant, canonicalUrl) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="../../src/styles.css?v=${encodeURIComponent(assetVersion)}" />
-    <meta property="og:site_name" content="Mesa Abierta" />
+    <meta property="og:site_name" content="${escapeHtml(config.brandName)}" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${description}" />
@@ -101,7 +101,7 @@ function renderRestaurantPage(restaurant, canonicalUrl) {
   <body>
     <div id="app" aria-live="polite">
       <div class="catalog-shell">
-        <header class="topbar"><a class="wordmark" href="./"><span class="wordmark-icon">M</span><span>Mesa Abierta</span></a><span class="demo-flag is-public"><span></span>CATÁLOGO PÚBLICO</span></header>
+        <header class="topbar"><a class="wordmark" href="./"><span class="wordmark-icon">M</span><span>${escapeHtml(config.brandName)}</span></a><nav class="site-nav" aria-label="Navegación principal"><a href="./">Inicio</a><a href="negocios/">Para negocios</a><a href="admin/">Administración</a></nav><span class="demo-flag is-public"><span></span>CATÁLOGO PÚBLICO</span></header>
         <main class="seo-restaurant-page"><div class="seo-restaurant-art">${cover}</div><p class="eyebrow">CATÁLOGO PÚBLICO</p><h1>${name}</h1><p>${description}</p><a class="admin-preview-link" href="./">Abrir menú digital ↗</a></main>
       </div>
     </div>
@@ -120,7 +120,7 @@ function renderRestaurantPage(restaurant, canonicalUrl) {
 function renderDirectoryCard(restaurant) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(restaurant.slug || '')) return '';
   const name = escapeHtml(restaurant.name);
-  const description = escapeHtml(restaurant.description || `Consulta el catálogo digital de ${restaurant.name} en Mesa Abierta.`);
+  const description = escapeHtml(restaurant.description || `Consulta el catálogo digital de ${restaurant.name} en ${config.brandName}.`);
   const image = restaurant.cover_image_url || restaurant.logo_url || '';
   const media = image
     ? `<span class="directory-row-image"><img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async" /></span>`
@@ -133,11 +133,11 @@ function renderDirectoryItemList(restaurants) {
   return `<script id="page-structured-data" type="application/ld+json">${escapeJsonLd({
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'WebSite', name: 'Mesa Abierta', url: siteRoot, inLanguage: 'es' },
-      { '@type': 'Organization', name: 'Mesa Abierta', url: siteRoot },
+      { '@type': 'WebSite', name: config.brandName, url: siteRoot, inLanguage: 'es' },
+      { '@type': 'Organization', name: config.brandName, url: siteRoot },
       ...(entries.length ? [{
         '@type': 'ItemList',
-        name: 'Restaurantes disponibles en Mesa Abierta',
+        name: `Restaurantes disponibles en ${config.brandName}`,
         itemListElement: entries.map((restaurant, index) => ({
           '@type': 'ListItem',
           position: index + 1,
@@ -147,6 +147,81 @@ function renderDirectoryItemList(restaurants) {
       }] : []),
     ],
   })}</script>`;
+}
+
+function renderBusinessPage(canonicalUrl) {
+  const formatter = new Intl.NumberFormat('es-ES', { useGrouping: 'always' });
+  const plans = config.businessPlans.map((plan) => {
+    const regularPrice = config.businessMonthlyPrice * plan.months;
+    const totalPrice = Math.round(regularPrice * (1 - plan.discountPercent / 100));
+    return {
+      ...plan,
+      totalPrice,
+      savings: regularPrice - totalPrice,
+      monthlyEquivalent: Math.round(totalPrice / plan.months),
+    };
+  });
+  const message = `Hola, quiero información sobre el servicio de menús digitales de ${config.brandName}.`;
+  const contactUrl = `https://wa.me/${encodeURIComponent(config.businessWhatsApp)}?text=${encodeURIComponent(message)}`;
+  const description = 'Publica el menú de tu negocio en un catálogo digital fácil de consultar, actualizar y compartir.';
+  const structuredData = escapeJsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: `Menús digitales para negocios | ${config.brandName}`,
+    description,
+    provider: { '@type': 'Organization', name: config.brandName },
+    offers: plans.map((plan) => ({
+      '@type': 'Offer',
+      price: String(plan.totalPrice),
+      priceCurrency: config.businessCurrency,
+      description: `Plan ${plan.label} por ${plan.months} ${plan.months === 1 ? 'mes' : 'meses'}`,
+    })),
+  });
+  return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="description" content="${escapeHtml(description)}" />
+    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    <base href="../" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="src/styles.css?v=${encodeURIComponent(assetVersion)}" />
+    <meta property="og:site_name" content="${escapeHtml(config.brandName)}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Menú digital para negocios | ${escapeHtml(config.brandName)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta name="twitter:card" content="summary" />
+    <script id="page-structured-data" type="application/ld+json">${structuredData}</script>
+    <title>Menú digital para negocios | ${escapeHtml(config.brandName)}</title>
+    <script>window.CATALOG_BASE_PATH = new URL('../', window.location.href).pathname; window.CATALOG_ASSET_VERSION = '${escapeHtml(assetVersion)}';</script>
+  </head>
+  <body>
+    <div id="app" aria-live="polite">
+      <div class="business-shell">
+        <header class="directory-topbar"><a class="directory-brand" href="./"><span class="brand-symbol">M</span><span>${escapeHtml(config.brandName)}</span></a><nav class="site-nav" aria-label="Navegación principal"><a href="./">Inicio</a><a href="negocios/" aria-current="page">Para negocios</a><a href="admin/">Administración</a></nav></header>
+        <main>
+          <section class="business-hero"><p class="eyebrow">SERVICIO PARA NEGOCIOS</p><h1>Tu menú digital, listo para compartir<span>.</span></h1><p>${escapeHtml(description)} Tus clientes lo abren desde un enlace, sin descargar una aplicación.</p><a class="business-whatsapp" href="${contactUrl}" target="_blank" rel="noopener noreferrer">Contactar por WhatsApp</a></section>
+          <section class="business-includes"><div class="business-section-heading"><p class="eyebrow">LO ESENCIAL, EN UN SOLO ENLACE</p><h2>Tu negocio, presentado con claridad.</h2></div><div class="business-feature-list"><article><span>01</span><h3>Catálogo propio</h3><p>Productos y categorías organizados para que tus clientes encuentren lo que buscan.</p></article><article><span>02</span><h3>Actualizaciones sencillas</h3><p>Administra nombres, precios, disponibilidad e imágenes desde tu panel.</p></article><article><span>03</span><h3>Un enlace para compartir</h3><p>Tu catálogo público se puede abrir desde redes sociales, mensajes o un código QR.</p></article></div></section>
+          <section class="business-pricing"><div class="business-section-heading"><p class="eyebrow">PLAN BÁSICO</p><h2>Todo lo necesario para publicar tu menú.</h2><p>Catálogo de productos, categorías, imágenes, precios y disponibilidad en un enlace para compartir.</p></div><p class="business-plan-note">Incluye soporte durante las 24 horas. El pago trimestral ofrece el mejor equilibrio para comenzar.</p><div class="business-plan-grid">${plans.map((plan) => `<article class="business-plan${plan.months === 3 ? ' is-recommended' : ''}">${plan.months === 3 ? '<p class="business-plan-badge">RECOMENDADO</p>' : ''}<h3>${plan.label}</h3><p class="business-plan-total"><strong>${formatter.format(plan.totalPrice)}</strong><span>${config.businessCurrency} · ${plan.months === 1 ? 'cada mes' : `cada ${plan.months} meses`}</span></p><p class="business-plan-monthly">Equivale a ${formatter.format(plan.monthlyEquivalent)} ${config.businessCurrency}/mes</p>${plan.discountPercent ? `<p class="business-plan-savings">Ahorras ${formatter.format(plan.savings)} ${config.businessCurrency} (${plan.discountPercent}%)</p>` : '<p class="business-plan-savings">Sin compromiso trimestral</p>'}</article>`).join('')}</div><a class="business-whatsapp business-whatsapp-dark" href="${contactUrl}" target="_blank" rel="noopener noreferrer">Hablar sobre mi negocio</a></section>
+        </main>
+        <footer class="directory-footer"><span class="footer-mark">${escapeHtml(config.brandName.toLocaleUpperCase('es'))}</span><a href="./">Volver al inicio</a></footer>
+      </div>
+    </div>
+    <script defer src="src/data/demoRestaurants.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/router.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/config.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/seo.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/supabaseRest.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/admin.js?v=${encodeURIComponent(assetVersion)}"></script>
+    <script defer src="src/main.js?v=${encodeURIComponent(assetVersion)}"></script>
+  </body>
+</html>
+`;
 }
 
 function renderDirectoryHtml(html, restaurants) {
@@ -174,9 +249,13 @@ function updateDirectoryHtml(restaurants) {
 async function main() {
   const restaurants = await activeSlugs();
   updateDirectoryHtml(restaurants);
+  const businessUrl = new URL('negocios/', siteRoot).href;
+  fs.mkdirSync('negocios', { recursive: true });
+  fs.writeFileSync('negocios/index.html', renderBusinessPage(businessUrl));
   let prerendered = 0;
   const urls = [
     `<url><loc>${escapeXml(siteRoot)}</loc></url>`,
+    `<url><loc>${escapeXml(businessUrl)}</loc></url>`,
     ...restaurants.map((restaurant) => {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(restaurant.slug || '')) return '';
       const loc = new URL(`r/${encodeURIComponent(restaurant.slug)}/`, siteRoot).href;
@@ -195,7 +274,7 @@ async function main() {
   console.log(`Generated ${prerendered} restaurant page(s) and sitemap URLs.`);
 }
 
-module.exports = { renderDirectoryCard, renderDirectoryHtml, renderDirectoryItemList, renderRestaurantPage };
+module.exports = { renderBusinessPage, renderDirectoryCard, renderDirectoryHtml, renderDirectoryItemList, renderRestaurantPage };
 
 if (require.main === module) {
   main().catch((error) => {

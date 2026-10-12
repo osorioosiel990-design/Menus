@@ -8,7 +8,7 @@ window.CatalogRouter = {
     const segments = pathname.split('/').filter(Boolean);
     let routeIndex = -1;
     segments.forEach((segment, index) => {
-      if ((segment === 'r' && segments.length - index === 2) || (segment === 'admin' && segments.length - index === 1)) routeIndex = index;
+      if ((segment === 'r' && segments.length - index === 2) || (['admin', 'negocios'].includes(segment) && segments.length - index === 1)) routeIndex = index;
     });
     if (routeIndex <= 0) return '';
     return `/${segments.slice(0, routeIndex).join('/')}`;
@@ -28,6 +28,8 @@ window.CatalogRouter = {
     if (path === '/') return { name: 'home' };
 
     if (path === '/admin') return { name: 'admin' };
+
+    if (path === '/negocios') return { name: 'business' };
 
     const restaurantMatch = path.match(/^\/r\/([^/]+)$/);
     if (restaurantMatch) {

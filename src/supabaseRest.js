@@ -1,6 +1,7 @@
 (() => {
   const configuration = window.CATALOG_CONFIG || {};
   const storageKey = 'catalog-admin-session-v1';
+  const catalogBucket = 'restaurant-catalog';
 
   function getConfigurationError() {
     if (!configuration.supabaseUrl || !configuration.publishableKey) {
@@ -128,10 +129,73 @@
     return request(`/rest/v1/${path}`, options);
   }
 
+  function publicStorageUrl(path) {
+    if (!path) return '';
+    const base = configuration.supabaseUrl.replace(/\/+$/, '');
+    const encodedPath = String(path).split('/').map(encodeURIComponent).join('/');
+    return `${base}/storage/v1/object/public/${catalogBucket}/${encodedPath}`;
+  }
+
+  function encodeStoragePath(path) {
+    return String(path).split('/').map(encodeURIComponent).join('/');
+  }
+
+  async function uploadObject(path, file, { session, upsert = true } = {}) {
+    if (session?.refresh_token && session.expires_at <= Math.floor(Date.now() / 1000) + 60) {
+      await refreshSession(session);
+    }
+    const headers = {
+      apikey: configuration.publishableKey,
+      Authorization: `Bearer ${session?.access_token || configuration.publishableKey}`,
+      'x-upsert': String(upsert),
+    };
+    if (file.type) headers['Content-Type'] = file.type;
+
+    let response;
+    try {
+      response = await fetch(`${projectUrl()}/storage/v1/object/${catalogBucket}/${encodeStoragePath(path)}`, {
+        method: 'POST',
+        headers,
+        body: file,
+      });
+    } catch {
+      throw new Error('No fue posible conectar con Storage. Revisa la conexión a Internet.');
+    }
+
+    const text = await response.text();
+    let data = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text };
+      }
+    }
+    if (!response.ok) {
+      const message = data?.message || data?.error || data?.statusCode || `Storage respondió con el código ${response.status}.`;
+      throw new Error(message);
+    }
+    return data;
+  }
+
+  async function removeObjects(paths, { session } = {}) {
+    const list = (Array.isArray(paths) ? paths : [paths]).filter(Boolean);
+    if (!list.length) return null;
+    const result = await request(`/storage/v1/object/${catalogBucket}`, {
+      method: 'DELETE',
+      body: { prefixes: list },
+      session,
+    });
+    return result;
+  }
+
   window.CatalogSupabase = {
     getConfigurationError,
     request,
     rest,
+    publicStorageUrl,
+    uploadObject,
+    removeObjects,
     persistSession,
     readSession,
     clearSession,
